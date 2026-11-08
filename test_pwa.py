@@ -1,0 +1,41 @@
+import os; os.makedirs('tests/out', exist_ok=True)
+from playwright.sync_api import sync_playwright
+P=F=0
+def check(n,c):
+    global P,F
+    print(('PASS ' if c else 'FAIL ')+n); P+=c; F+=(not c)
+with sync_playwright() as p:
+    b=p.chromium.launch(executable_path=os.environ.get('CHROME') or None,args=['--no-sandbox'])
+    ctx=b.new_context(viewport={'width':390,'height':844}); pg=ctx.new_page(); errs=[]
+    pg.on('pageerror',lambda e:errs.append(str(e))); pg.on('console',lambda m:m.type=='error' and errs.append(m.text))
+    pg.goto('http://localhost:8765/'); pg.wait_for_timeout(1500)
+    cdp=ctx.new_cdp_session(pg)
+    man=cdp.send('Page.getAppManifest'); inst=cdp.send('Page.getInstallabilityErrors')
+    check('manifest parsed without errors', man.get('url','').endswith('manifest.webmanifest') and not man.get('errors'))
+    print('  installability errors:', inst.get('installabilityErrors'))
+    check('Chrome reports app installable (incognito test profile ignored)', [e for e in inst.get('installabilityErrors',[]) if e.get('errorId')!='in-incognito']==[])
+    ready=pg.evaluate("navigator.serviceWorker.ready.then(r=>!!r.active)")
+    pg.reload(); pg.wait_for_timeout(800)
+    check('service worker active & controlling', ready and pg.evaluate('!!navigator.serviceWorker.controller'))
+    pg.evaluate("""(()=>{const S=__gym.S;S.exercises=[{id:'cccccc1',group:'chest',name:'לחיצה',sets:3,w:20,r:10,rest:60,machine:'',notes:'',km:0,min:0,kind:'walk',inc:0,ivN:0,ivW:0,ivR:0}];localStorage.setItem('gymapp.v1',JSON.stringify(S));})()""")
+    ctx.set_offline(True); pg.reload(); pg.wait_for_timeout(800)
+    check('opens offline with data', pg.locator('.cal .d[data-a=day]').count()>=28 and pg.evaluate('__gym.S.exercises.length')==1)
+    check('logo & icons served offline', pg.evaluate("fetch('icon-192.png').then(r=>r.ok)"))
+    ctx.set_offline(False)
+    pg.click('[data-a=settings]')
+    check('file backup buttons shown in standalone app', pg.locator('[data-a=bk-file]').count()==1 and pg.locator('[data-a=bk-load]').count()==1)
+    with pg.expect_download() as d: pg.click('[data-a=bk-file]')
+    path=d.value.path(); import json; data=json.load(open(path))
+    check('backup file downloads valid JSON', len(data['exercises'])==1 and d.value.suggested_filename.startswith('gym-backup-'))
+    pg.click('[data-a=close]')
+    # restore from file
+    pg.evaluate("__gym.S.exercises=[]"); pg.set_input_files('#bkfile', path); pg.wait_for_timeout(300); pg.click('[data-a=confirm-ok]'); pg.wait_for_timeout(200)
+    check('restore from backup file', pg.evaluate('__gym.S.exercises.length')==1)
+    pg.click('[data-a=help]'); check('help screen opens', 'איך משתמשים' in pg.inner_text('#md')); pg.click('#md [data-a=close]')
+    pg.click('[data-a=settings]'); pg.check('input[name=s-zoom][value="130"]'); pg.click('[data-a=set-save]'); pg.wait_for_timeout(100)
+    check('large text setting applied', pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--z').trim()")=='1.3')
+    check('no console errors', not errs)
+    if errs: print(errs)
+    pg.screenshot(path='tests/out/pwa_home.png')
+    b.close()
+print(f'\n{P} passed, {F} failed')

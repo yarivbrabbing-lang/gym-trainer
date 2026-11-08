@@ -30,12 +30,14 @@ main,#md{zoom:var(--z,1)}
 .today{border:2px solid var(--acc2);background:linear-gradient(180deg,#14241d,var(--panel))}
 .today h2{margin:0 0 4px}
 .steps{margin:6px 0 0;padding-inline-start:22px;line-height:1.7}
+.timer.cardio{border-color:var(--blue)}.timer.cardio .bar>div{background:var(--blue)}
 .markbig{width:100%;margin:6px 0 10px;padding:14px;font-size:18px;font-weight:800}
 body{padding:env(safe-area-inset-top) env(safe-area-inset-right) calc(72px + env(safe-area-inset-bottom)) env(safe-area-inset-left)}
 header{position:sticky;top:0;z-index:5;background:rgba(15,18,22,.95);backdrop-filter:blur(6px);display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--line)}
 header h1{font-size:19px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hdrTimer.show~#sync{display:none}
-#sync{font-size:12px;color:var(--mut)}
+#sync{font-size:12px;color:var(--mut);background:none;border:0;font-family:inherit;padding:6px 4px}
+#sync[data-a]{cursor:pointer;color:var(--blue);text-decoration:underline}
 main{max-width:760px;margin:0 auto;padding:12px}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;background:none;border:0;color:var(--mut);padding:9px 0 8px;font-size:14px;font-family:inherit;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
@@ -127,7 +129,11 @@ td.n,th.n{text-align:left;font-variant-numeric:tabular-nums}
 .actions .btn{flex:1}
 .li{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid var(--line)}
 .li .nm{flex:1;font-size:15px}
-#toast{position:fixed;bottom:86px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;z-index:30;display:none}
+#undo{position:fixed;bottom:84px;left:12px;right:12px;z-index:29;display:none;align-items:center;gap:10px;background:#26303a;border:1px solid var(--line);color:var(--txt);border-radius:14px;padding:8px 10px 8px 14px;max-width:520px;margin:0 auto}
+#undo.show{display:flex}#undo .btn{background:var(--warn);color:#2a1a00;border-color:var(--warn);font-weight:800}
+.last{font-size:14px;color:var(--mut);margin-top:4px}
+.sug{margin-top:8px;padding:8px 10px;border-radius:10px;background:#122a3d;border:1px solid var(--blue);font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+#toast{position:fixed;bottom:146px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;z-index:30;display:none}
 .empty-msg{text-align:center;color:var(--mut);padding:20px 8px}
 </style>
 </head>
@@ -136,7 +142,7 @@ td.n,th.n{text-align:left;font-variant-numeric:tabular-nums}
   <img class="logo" src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agb2Zmc2V0PSIwIiBzdG9wLWNvbG9yPSIjMWIyNzMzIi8+PHN0b3Agb2Zmc2V0PSIxIiBzdG9wLWNvbG9yPSIjMGIwZjEzIi8+PC9saW5lYXJHcmFkaWVudD48L2RlZnM+PHJlY3Qgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHJ4PSIxMTIiIGZpbGw9InVybCgjYmcpIi8+PGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMjU2IDI1Nikgc2NhbGUoMS4wKSB0cmFuc2xhdGUoLTI1NiAtMjU2KSI+PGNpcmNsZSBjeD0iMjU2IiBjeT0iMjU2IiByPSIxNjgiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzI2MzIzZCIgc3Ryb2tlLXdpZHRoPSIyNiIvPjxjaXJjbGUgY3g9IjI1NiIgY3k9IjI1NiIgcj0iMTY4IiBmaWxsPSJub25lIiBzdHJva2U9IiMyZmQzOGEiIHN0cm9rZS13aWR0aD0iMjYiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWRhc2hhcnJheT0iNzkyIDEwNTYiIHRyYW5zZm9ybT0icm90YXRlKC05MCAyNTYgMjU2KSIvPjxnIGZpbGw9IiNlOWVlZjMiPjxyZWN0IHg9IjEzOCIgeT0iMjAwIiB3aWR0aD0iMzAiIGhlaWdodD0iMTEyIiByeD0iMTAiLz48cmVjdCB4PSIxNzAiIHk9IjE3NCIgd2lkdGg9IjM2IiBoZWlnaHQ9IjE2NCIgcng9IjEyIi8+PHJlY3QgeD0iMzA2IiB5PSIxNzQiIHdpZHRoPSIzNiIgaGVpZ2h0PSIxNjQiIHJ4PSIxMiIvPjxyZWN0IHg9IjM0NCIgeT0iMjAwIiB3aWR0aD0iMzAiIGhlaWdodD0iMTEyIiByeD0iMTAiLz48cmVjdCB4PSIyMDYiIHk9IjI0NSIgd2lkdGg9IjEwMCIgaGVpZ2h0PSIyMiIgcng9IjYiLz48L2c+PHBvbHlsaW5lIHBvaW50cz0iMTk2LDI1NiAyMjIsMjU2IDIzNiwyMjIgMjU0LDI5OCAyNzAsMjMyIDI4MiwyNTYgMzE2LDI1NiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjZWY1YjViIiBzdHJva2Utd2lkdGg9IjEzIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L2c+PC9zdmc+" alt="">
   <h1>ניהול אימונים</h1>
   <button id="hdrTimer" data-a="tab" data-v="work" aria-label="זמן מנוחה שנותר – מעבר לאימון"></button>
-  <span id="sync">💾 במכשיר</span>
+  <span id="sync" tabindex="0">💾 במכשיר</span>
   <button class="ico" data-a="help" aria-label="עזרה">❓</button>
   <button class="ico" data-a="settings" aria-label="הגדרות">⚙️</button>
 </header>
@@ -149,6 +155,7 @@ td.n,th.n{text-align:left;font-variant-numeric:tabular-nums}
 </nav>
 <div id="ov"><div id="md" role="dialog" aria-modal="true"></div></div>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="undo" role="status" aria-live="polite"><span id="undo-t" class="sp"></span><button class="btn sm" data-a="undo">↶ בטל</button></div>
 <div id="upd" role="alert"><span class="sp">גרסה חדשה של האפליקציה מוכנה</span><button class="btn sm" data-a="reload-app">רענן</button></div>
 <input type="file" id="bkfile" accept="application/json,.json,.txt" hidden>
 
@@ -163,6 +170,7 @@ const MAX_PER_GROUP=5, MAX_PLAN_ITEMS=35, MAX_PROGRAMS=30;
 const DATE_RE=/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
 const ID_RE=/^[a-z0-9]{6,32}$/;
 const LS_KEY='gymapp.v1';
+const GCID_RE=/^[0-9]{6,20}-[a-z0-9]{16,64}\.apps\.googleusercontent\.com$/;
 const $=s=>document.querySelector(s);
 const ESC_MAP={'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;','`':'&#96;'};
 const esc=s=>String(s==null?'':s).replace(/[&<>"'`]/g,c=>ESC_MAP[c]);
@@ -183,7 +191,7 @@ const isCardio=g=>g==='cardio';
 const own=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 
 /* ============ state & sanitizing (all external data passes here) ============ */
-function defState(){return {v:1,exercises:[],programs:[],plans:{},logs:{},settings:{exRest:600,allowSkip:false,sound:true,vol:100,zoom:100,age:0},active:null,updatedAt:0};}
+function defState(){return {v:1,exercises:[],programs:[],plans:{},logs:{},settings:{exRest:600,allowSkip:false,sound:true,vol:100,zoom:100,age:0,voice:true,gcid:'',gconn:false},active:null,updatedAt:0};}
 function sanEx(e){
   if(!e||typeof e!=='object'||!ID_RE.test(e.id)||!GK.includes(e.group))return null;
   return {id:e.id,group:e.group,name:str(e.name,60).trim()||'תרגיל',sets:int(e.sets,1,10,3),w:num(e.w,0,1000,0),r:int(e.r,0,200,10),
@@ -192,7 +200,7 @@ function sanEx(e){
 /* cardio extras: kind walk/run, incline %, intervals (run only) */
 function sanCardio(e){
   const kind=e.kind==='run'?'run':'walk',run=kind==='run';
-  return {kind,inc:num(e.inc,0,40,0),ivN:run?int(e.ivN,0,50,0):0,ivW:run?int(e.ivW,0,1800,0):0,ivR:run?int(e.ivR,0,1800,0):0};
+  return {kind,spd:num(e.spd,0,30,0),inc:num(e.inc,0,40,0),ivN:run?int(e.ivN,0,50,0):0,ivW:run?int(e.ivW,0,1800,0):0,ivR:run?int(e.ivR,0,1800,0):0};
 }
 const hr=v=>{const n=Number(v);return Number.isFinite(n)&&n>=30&&n<=250?Math.round(n):0;};
 function sanIds(a){return Array.isArray(a)?a.filter(x=>typeof x==='string'&&ID_RE.test(x)).slice(0,MAX_PLAN_ITEMS):[];}
@@ -206,7 +214,7 @@ function normPlan(p,exs){
   return {warm,cool,items};
 }
 const planSeq=p=>p?[p.warm,...p.items,p.cool].filter(Boolean):[];
-function sanSet(s){if(!s||typeof s!=='object')return null;return {w:num(s.w,0,1000,0),r:int(s.r,0,200,0),km:num(s.km,0,500,0),min:int(s.min,0,600,0),inc:num(s.inc,0,40,0),iv:int(s.iv,0,50,0),at:int(s.at,0,9e15,0)};}
+function sanSet(s){if(!s||typeof s!=='object')return null;return {w:num(s.w,0,1000,0),r:int(s.r,0,200,0),km:num(s.km,0,500,0),min:int(s.min,0,600,0),inc:num(s.inc,0,40,0),spd:num(s.spd,0,30,0),iv:int(s.iv,0,50,0),at:int(s.at,0,9e15,0)};}
 function sanLogItem(it){
   if(!it||typeof it!=='object'||!GK.includes(it.group))return null;
   const t=it.t&&typeof it.t==='object'?it.t:{};
@@ -230,9 +238,9 @@ function sanState(x){
   if(x.plans&&typeof x.plans==='object')for(const k of Object.keys(x.plans)){const p=x.plans[k];if(DATE_RE.test(k)&&p&&typeof p==='object'){const n=normPlan(p,s.exercises);if(n.warm||n.cool||n.items.length)s.plans[k]={name:str(p.name,40),...n};}}
   s.logs=sanLogs(x.logs);
   const st=x.settings||{};
-  s.settings={exRest:int(st.exRest,0,3600,600),allowSkip:st.allowSkip===true,sound:st.sound!==false,vol:int(st.vol,0,100,100),zoom:[100,115,130].includes(st.zoom)?st.zoom:100,age:int(st.age,0,100,0)};
+  s.settings={exRest:int(st.exRest,0,3600,600),allowSkip:st.allowSkip===true,sound:st.sound!==false,vol:int(st.vol,0,100,100),zoom:[100,115,130].includes(st.zoom)?st.zoom:100,age:int(st.age,0,100,0),voice:st.voice!==false,gcid:typeof st.gcid==='string'&&GCID_RE.test(st.gcid)?st.gcid:'',gconn:st.gconn===true};
   const a=x.active;
-  if(a&&typeof a==='object'&&DATE_RE.test(a.date)&&['ready','rest','exrest'].includes(a.phase)&&s.logs[a.date])
+  if(a&&typeof a==='object'&&DATE_RE.test(a.date)&&['ready','rest','exrest','cardio','cardioend'].includes(a.phase)&&s.logs[a.date])
     s.active={date:a.date,idx:int(a.idx,0,MAX_PLAN_ITEMS-1,0),phase:a.phase,endsAt:int(a.endsAt,0,9e15,0),dur:int(a.dur,0,3600,0)};
   s.updatedAt=int(x.updatedAt,0,9e15,0);
   return s;
@@ -248,7 +256,7 @@ function lsLoad(){try{const r=localStorage.getItem(LS_KEY);return r?JSON.parse(r
 function commit(dateK){
   S.updatedAt=Date.now();dirtyCore=true;
   if(dateK&&DATE_RE.test(dateK))dirtyMonths.add(dateK.slice(0,7));
-  lsSave();scheduleFlush();
+  lsSave();scheduleFlush();scheduleDrive();
 }
 function scheduleFlush(){if(!cloudOk)return;clearTimeout(flushT);flushT=setTimeout(flush,1000);}
 function coreBody(){return {v:1,exercises:S.exercises,programs:S.programs,plans:S.plans,settings:S.settings,active:S.active,updatedAt:S.updatedAt};}
@@ -270,6 +278,104 @@ async function flush(){
   }finally{flushing=false;}
 }
 function setSync(t){$('#sync').textContent=t;}
+
+/* ============ Google Drive sync (installed app only) ============
+   - data file lives in the user's hidden appDataFolder (scope drive.appdata: no access to other Drive files)
+   - access token kept in memory only; every remote payload goes through sanState() */
+const DRIVE_FILE='gym-data.json',DRIVE_API='https://www.googleapis.com',GIS_SRC='https://accounts.google.com/gsi/client';
+const gd={token:null,exp:0,fileId:null,busy:false,again:false,client:null,t:null,last:0};
+const driveCapable=()=>!inFrame&&(location.protocol==='https:'||location.hostname==='localhost');
+const driveOK=()=>driveCapable()&&GCID_RE.test(S.settings.gcid||'');
+const driveLive=()=>!!gd.token&&Date.now()<gd.exp;
+let gisP=null;
+function loadGIS(){
+  if(window.google&&window.google.accounts&&window.google.accounts.oauth2)return Promise.resolve();
+  if(gisP)return gisP;
+  gisP=new Promise((res,rej)=>{const sc=document.createElement('script');sc.src=GIS_SRC;sc.async=true;sc.onload=()=>res();sc.onerror=()=>{gisP=null;rej(new Error('gis'));};document.head.appendChild(sc);setTimeout(()=>rej(new Error('timeout')),15000);});
+  return gisP;
+}
+function cloudChip(){
+  const el=$('#sync');if(!el||!driveOK())return;
+  el.setAttribute('data-a','cloud-sync');el.setAttribute('role','button');
+  if(gd.busy)return;
+  el.textContent=driveLive()?'☁️ מסונכרן':'☁️ סנכרן';
+}
+function driveConnect(){
+  if(!driveOK())return;
+  const o=window.google&&window.google.accounts&&window.google.accounts.oauth2;
+  if(!o){setSync('⏳ טוען…');loadGIS().then(()=>{cloudChip();toast('מוכן – לחץ שוב על ☁️ סנכרן');}).catch(()=>{setSync('⚠️ אין חיבור');toast('לא ניתן לטעון את Google – בדוק חיבור לאינטרנט');});return;}
+  if(!gd.client)gd.client=o.initTokenClient({client_id:S.settings.gcid,scope:'https://www.googleapis.com/auth/drive.appdata',
+    callback:r=>{
+      if(r&&typeof r.access_token==='string'&&r.access_token.length<4096&&!r.error){
+        gd.token=r.access_token;gd.exp=Date.now()+(int(r.expires_in,60,7200,3600)-60)*1000;
+        if(!S.settings.gconn){S.settings.gconn=true;lsSave();}
+        driveSync(true);
+      }else{setSync('⚠️ ההתחברות נכשלה');}
+    },
+    error_callback:()=>{cloudChip();}});
+  gd.client.requestAccessToken({prompt:S.settings.gconn?'':'consent'});
+}
+async function dapi(path,opt){
+  const o=Object.assign({},opt||{});o.headers=Object.assign({Authorization:'Bearer '+gd.token},o.headers||{});
+  const r=await fetch(DRIVE_API+path,o);
+  if(r.status===401||r.status===403){gd.token=null;throw new Error('auth');}
+  if(!r.ok)throw new Error('http '+r.status);
+  return r;
+}
+const setsOf=l=>l?l.items.reduce((a,i)=>a+i.sets.length,0):0;
+function mergeStates(a,b){
+  const newer=a.updatedAt>=b.updatedAt?a:b,older=newer===a?b:a;
+  const out=sanState(JSON.parse(JSON.stringify(newer)));
+  const ol=older.logs||{};
+  for(const k of Object.keys(ol)){
+    if(!DATE_RE.test(k))continue;
+    const mine=out.logs[k],theirs=ol[k];
+    if(!mine||setsOf(theirs)>setsOf(mine)||(setsOf(theirs)===setsOf(mine)&&theirs.finishedAt&&!mine.finishedAt))out.logs[k]=theirs;
+  }
+  out.settings.gcid=S.settings.gcid;out.settings.gconn=S.settings.gconn;
+  out.updatedAt=Math.max(a.updatedAt||0,b.updatedAt||0);
+  return sanState(out);
+}
+function scheduleDrive(){if(!driveLive())return;clearTimeout(gd.t);gd.t=setTimeout(()=>driveSync(false),4000);}
+async function driveSync(manual){
+  if(!driveLive()){gd.token=null;cloudChip();if(manual)driveConnect();return;}
+  if(gd.busy){gd.again=true;return;}
+  gd.busy=true;setSync('⏳ מסנכרן…');
+  try{
+    if(!gd.fileId){
+      const q=encodeURIComponent("name='"+DRIVE_FILE+"' and trashed=false");
+      const j=await (await dapi('/drive/v3/files?spaces=appDataFolder&fields=files(id)&pageSize=10&q='+q)).json();
+      const id=j&&Array.isArray(j.files)&&j.files[0]&&j.files[0].id;
+      gd.fileId=typeof id==='string'&&/^[A-Za-z0-9_-]{10,200}$/.test(id)?id:null;
+    }
+    if(gd.fileId){
+      const txt=await (await dapi('/drive/v3/files/'+gd.fileId+'?alt=media')).text();
+      if(txt.length<=5e6){let x=null;try{x=JSON.parse(txt);}catch(e){}
+        if(x){const m=mergeStates(S,sanState(x));if(JSON.stringify(m)!==JSON.stringify(S)){S=m;lsSave();if(S.active)ui.workDate=S.active.date;render();}}}
+    }
+    const body=JSON.stringify(S);
+    if(gd.fileId){
+      await dapi('/upload/drive/v3/files/'+gd.fileId+'?uploadType=media',{method:'PATCH',headers:{'Content-Type':'application/json'},body});
+    }else{
+      const fd=new FormData();
+      fd.append('metadata',new Blob([JSON.stringify({name:DRIVE_FILE,parents:['appDataFolder'],mimeType:'application/json'})],{type:'application/json'}));
+      fd.append('file',new Blob([body],{type:'application/json'}));
+      const j=await (await dapi('/upload/drive/v3/files?uploadType=multipart&fields=id',{method:'POST',body:fd})).json();
+      gd.fileId=j&&typeof j.id==='string'&&/^[A-Za-z0-9_-]{10,200}$/.test(j.id)?j.id:null;
+    }
+    gd.last=Date.now();
+    if(manual)toast('☁️ הנתונים סונכרנו עם Google Drive');
+  }catch(e){
+    if(manual)toast(gd.token?'הסנכרון נכשל – נסה שוב':'נדרשת התחברות מחדש לגוגל');
+  }finally{
+    gd.busy=false;cloudChip();
+    if(gd.again){gd.again=false;scheduleDrive();}
+  }
+}
+function driveDisconnect(){
+  try{if(gd.token&&window.google&&window.google.accounts)window.google.accounts.oauth2.revoke(gd.token,()=>{});}catch(e){}
+  gd.token=null;gd.fileId=null;gd.client=null;S.settings.gconn=false;lsSave();cloudChip();
+}
 async function initCloud(){
   try{
     if(!window.claude||typeof window.claude.use!=='function')return;
@@ -312,6 +418,25 @@ function beep(times){
     }}catch(e){}}
   try{navigator.vibrate&&navigator.vibrate([400,150,400,150,400]);}catch(e){}
 }
+/* Hebrew voice announcements (Web Speech API) */
+let heVoice=null;
+function pickVoice(){try{const vs=window.speechSynthesis?speechSynthesis.getVoices():[];heVoice=vs.find(v=>/^(he|iw)/i.test(v.lang))||null;}catch(e){}}
+try{if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=pickVoice;}}catch(e){}
+function say(text,force){
+  if(!force&&!S.settings.voice)return;
+  try{if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+    const u=new SpeechSynthesisUtterance(String(text).slice(0,200));u.lang='he-IL';if(heVoice)u.voice=heVoice;u.rate=1;u.volume=Math.max(0.2,(S.settings.vol??100)/100);
+    speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+}
+const KW={walk:'הליכה',run:'ריצה'};
+function sayNext(a){
+  const l=S.logs[a.date],it=l&&l.items[a.idx];if(!it)return;
+  if(isCardio(it.group)){say(`${a.phase==='ready'&&it.sets.length===0?'התרגיל הבא: ':''}${it.name}, ${it.t.min?it.t.min+' דקות ':''}${KW[it.t.kind]||''}`);return;}
+  const n=it.sets.length+1,w=(it.sets[it.sets.length-1]||{}).w??it.t.w;
+  if(it.sets.length===0)say(`התרגיל הבא: ${it.name}${it.machine?', מכשיר '+it.machine:''}. סט 1 מתוך ${it.t.sets}${w?', '+w+' קילו':''}`);
+  else say(`המנוחה הסתיימה. סט ${n} מתוך ${it.t.sets}, ${it.name}${w?', '+w+' קילו':''}`);
+}
+const warned=new Set();
 let toastT;function toast(m){const t=$('#toast');t.textContent=m;t.style.display='block';clearTimeout(toastT);toastT=setTimeout(()=>t.style.display='none',2200);}
 
 /* ============ modal ============ */
@@ -331,6 +456,7 @@ function dayStatus(k){
 const KIND={walk:'🚶 הליכה',run:'🏃 ריצה'};
 function cardioDesc(c,sets){
   let s=`${KIND[c.kind]||KIND.walk} · ${c.min} דק׳ · ${fmtN(c.km,2)} ק״מ`;
+  if(c.spd)s+=` · ${fmtN(c.spd,1)} קמ״ש`;
   if(c.inc)s+=` · שיפוע ${fmtN(c.inc,1)}%`;
   if(c.kind==='run'&&c.ivN)s+=` · ${c.ivN} אינטרוולים (${c.ivW}/${c.ivR} שנ׳)`;
   if(sets>1)s+=` · ${sets} סטים`;
@@ -554,7 +680,7 @@ function openExEdit(id,group){
   const e=id?exById(id):null;
   const g=e?e.group:group;if(!GK.includes(g))return;
   const c=isCardio(g);
-  const v=e||{name:'',sets:c?1:3,w:0,r:10,rest:90,machine:'',notes:'',km:0,min:0,kind:'walk',inc:0,ivN:0,ivW:60,ivR:90};
+  const v=e||{name:'',sets:c?1:3,w:0,r:10,rest:90,machine:'',notes:'',km:0,min:c?20:0,kind:'walk',spd:0,inc:0,ivN:0,ivW:60,ivR:90};
   openModal(`<div class="mh"><h2>${e?'עריכת':'הוספת'} תרגיל</h2><button class="ico" data-a="close" aria-label="סגור">✕</button></div>
   <form id="exf" autocomplete="off">
   <label for="f-group">קבוצת שריר</label><select id="f-group">${GROUPS.map(([k,n])=>`<option value="${k}" ${k===g?'selected':''}>${esc(n)}</option>`).join('')}</select>
@@ -565,6 +691,7 @@ function openExEdit(id,group){
   <div class="cf-c"><label for="f-min">זמן (דקות)</label><input id="f-min" type="number" inputmode="numeric" min="0" max="600" value="${v.min}"></div>
   <div class="cf-c"><label for="f-km">ק״מ</label><input id="f-km" type="number" inputmode="decimal" step="0.1" min="0" max="500" value="${v.km}"></div></div>
   <div class="cf-c"><label>סוג</label><div class="row"><label class="pill" style="margin:0;padding:8px 14px;font-size:15px"><input type="radio" name="f-kind" value="walk" style="width:auto" ${v.kind!=='run'?'checked':''}> 🚶 הליכה</label><label class="pill" style="margin:0;padding:8px 14px;font-size:15px"><input type="radio" name="f-kind" value="run" style="width:auto" ${v.kind==='run'?'checked':''}> 🏃 ריצה</label></div>
+  <div class="grid2"><div><label for="f-spd">מהירות (קמ״ש)</label><input id="f-spd" type="number" inputmode="decimal" step="0.1" min="0" max="30" value="${v.spd||0}"></div><div><label>מרחק משוער</label><div id="f-est" class="mut" style="padding:10px 0">—</div></div></div>
   <label for="f-inc">זווית שיפוע (%)</label><input id="f-inc" type="number" inputmode="decimal" step="0.5" min="0" max="40" value="${v.inc}">
   <div class="cf-run grid3"><div><label for="f-ivn">אינטרוולים</label><input id="f-ivn" type="number" inputmode="numeric" min="0" max="50" value="${v.ivN}"></div>
   <div><label for="f-ivw">מאמץ (שנ׳)</label><input id="f-ivw" type="number" inputmode="numeric" min="0" max="1800" value="${v.ivW}"></div>
@@ -578,7 +705,8 @@ function openExEdit(id,group){
   toggleCardioFields();
 }
 const fKind=()=>{const r=document.querySelector('input[name=f-kind]:checked');return r&&r.value==='run'?'run':'walk';};
-function toggleCardioFields(){const g=$('#f-group');if(!g)return;const c=isCardio(g.value),run=fKind()==='run';
+function estDist(){const el=$('#f-est');if(!el)return;const sp=num($('#f-spd').value,0,30,0),mn=num($('#f-min').value,0,600,0);el.textContent=sp&&mn?`${fmtN(sp*mn/60,2)} ק״מ (${fmtN(sp,1)} קמ״ש × ${mn} דק׳)`:'—';}
+function toggleCardioFields(){estDist();const g=$('#f-group');if(!g)return;const c=isCardio(g.value),run=fKind()==='run';
   document.querySelectorAll('.cf-s').forEach(x=>x.style.display=c?'none':'');document.querySelectorAll('.cf-c').forEach(x=>x.style.display=c?'':'none');
   document.querySelectorAll('.cf-run').forEach(x=>x.style.display=run?'':'none');document.querySelectorAll('.cf-walk').forEach(x=>x.style.display=run?'none':'');}
 function saveEx(){
@@ -588,7 +716,7 @@ function saveEx(){
   const count=S.exercises.filter(e=>e.group===g&&e.id!==c.id).length;
   if(count>=MAX_PER_GROUP){toast(`בקבוצה "${GN[g]}" כבר יש ${MAX_PER_GROUP} תרגילים`);return;}
   const e=sanEx({id:c.id||newId(),group:g,name,sets:$('#f-sets').value,w:$('#f-w').value,r:$('#f-r').value,rest:$('#f-rest').value,machine:$('#f-machine').value,notes:$('#f-notes').value,km:$('#f-km').value,min:$('#f-min').value,
-    kind:fKind(),inc:$('#f-inc').value,ivN:$('#f-ivn').value,ivW:$('#f-ivw').value,ivR:$('#f-ivr').value});
+    kind:fKind(),spd:$('#f-spd').value,inc:$('#f-inc').value,ivN:$('#f-ivn').value,ivW:$('#f-ivw').value,ivR:$('#f-ivr').value});
   if(!e)return;
   const i=S.exercises.findIndex(x=>x.id===e.id);
   if(i>=0)S.exercises[i]=e;else S.exercises.push(e);
@@ -599,7 +727,7 @@ function saveEx(){
 function buildLog(k){
   const p=S.plans[k];if(!p)return null;
   const seq=[];if(p.warm)seq.push([p.warm,'warm']);p.items.forEach(id=>seq.push([id,'']));if(p.cool)seq.push([p.cool,'cool']);
-  const items=seq.map(([id,role])=>[exById(id),role]).filter(x=>x[0]).map(([e,role])=>({role,exId:e.id,name:e.name,group:e.group,machine:e.machine,notes:e.notes,rest:e.rest,t:{sets:e.sets,w:e.w,r:e.r,km:e.km,min:e.min,kind:e.kind,inc:e.inc,ivN:e.ivN,ivW:e.ivW,ivR:e.ivR},hrB:0,hrA:0,sets:[]}));
+  const items=seq.map(([id,role])=>[exById(id),role]).filter(x=>x[0]).map(([e,role])=>({role,exId:e.id,name:e.name,group:e.group,machine:e.machine,notes:e.notes,rest:e.rest,t:{sets:e.sets,w:e.w,r:e.r,km:e.km,min:e.min,kind:e.kind,spd:e.spd,inc:e.inc,ivN:e.ivN,ivW:e.ivW,ivR:e.ivR},hrB:0,hrA:0,sets:[]}));
   return items.length?{items,startedAt:Date.now(),finishedAt:0}:null;
 }
 function startWorkout(k){
@@ -612,7 +740,7 @@ function startWorkout(k){
   }
   ui.workDate=k;ui.tab='work';commit(k);closeModal();render();
 }
-function curDraft(i){const g=id=>{const el=document.getElementById(id);return el?el.value:undefined;};return {w:g('in-w-'+i),r:g('in-r-'+i),km:g('in-km-'+i),min:g('in-min-'+i),inc:g('in-inc-'+i),iv:g('in-iv-'+i)};}
+function curDraft(i){const g=id=>{const el=document.getElementById(id);return el?el.value:undefined;};return {w:g('in-w-'+i),r:g('in-r-'+i),km:g('in-km-'+i),min:g('in-min-'+i),inc:g('in-inc-'+i),spd:g('in-spd-'+i),iv:g('in-iv-'+i)};}
 function savePulse(el){
   const k=el.dataset.d,i=int(el.dataset.i,0,MAX_PLAN_ITEMS,0),w=el.dataset.hr;
   const l=DATE_RE.test(k)&&S.logs[k];if(!l||!l.items[i]||!isCardio(l.items[i].group)||(w!=='b'&&w!=='a'))return;
@@ -626,12 +754,28 @@ function saveKm(el){
   const v=Number(el.value);if(el.value===''||!Number.isFinite(v)||v<0||v>500){toast('מרחק לא תקין (0–500 ק״מ)');el.value=rec.km;return;}
   rec.km=Math.round(v*100)/100;commit(k);toast('המרחק נשמר');
 }
-function markSet(){
+/* cardio: countdown of the planned time; finishing is confirmed only when it reaches 0 */
+const needsCardioTimer=it=>isCardio(it.group)&&it.t.min>0;
+function cardioStart(){
   const a=S.active;if(!a||a.phase!=='ready')return;
+  const l=S.logs[a.date],it=l&&l.items[a.idx];if(!it||!needsCardioTimer(it))return;
+  unlockAudio();
+  const el=document.getElementById('in-min-'+it.sets.length),mn=el?num(el.value,0,600,it.t.min):it.t.min;
+  const hb=document.getElementById('hr-b-'+a.idx);if(hb&&hb.value&&!it.hrB)it.hrB=hr(hb.value);
+  a.phase='cardio';a.dur=Math.round(mn*60);a.endsAt=Date.now()+a.dur*1000;
+  say(`${KW[it.t.kind]||'אימון'} התחילה. ${Math.round(mn)} דקות`);
+  commit(a.date);if(!advance(false))render();else render();
+}
+function markSet(){
+  const a=S.active;if(!a)return;
   const l=S.logs[a.date];if(!l)return;const it=l.items[a.idx];if(!it||it.sets.length>=it.t.sets)return;
+  const ok=a.phase==='cardioend'||(a.phase==='ready'&&!needsCardioTimer(it));
+  if(!ok)return;
+  const lastOfAll=it.sets.length+1>=it.t.sets&&a.idx===l.items.length-1;
+  takeUndo(lastOfAll?'האימון הושלם':isCardio(it.group)?`${it.name} – סיום אושר`:`סט ${it.sets.length+1} סומן – ${it.name}`);
   unlockAudio();
   const d=curDraft(it.sets.length);
-  const s=sanSet({w:d.w??it.t.w,r:d.r??it.t.r,km:d.km??it.t.km,min:d.min??it.t.min,inc:d.inc??it.t.inc,iv:d.iv??it.t.ivN,at:Date.now()});
+  const s=sanSet({w:d.w??it.t.w,r:d.r??it.t.r,km:d.km??it.t.km,min:d.min??it.t.min,inc:d.inc??it.t.inc,spd:d.spd??it.t.spd,iv:d.iv??it.t.ivN,at:Date.now()});
   const hb=document.getElementById('hr-b-'+a.idx);if(isCardio(it.group)&&hb&&hb.value&&!it.hrB)it.hrB=hr(hb.value);
   it.sets.push(s);
   if(it.sets.length<it.t.sets){a.phase='rest';a.dur=it.rest;a.endsAt=Date.now()+it.rest*1000;}
@@ -639,29 +783,88 @@ function markSet(){
   else{finishWorkout(true);return;}
   commit(a.date);render();
 }
+/* one-level undo for the last mark / finish (10 seconds) */
+let undoSnap=null,undoT=null;
+function takeUndo(label){
+  const a=S.active;if(!a)return;
+  undoSnap={date:a.date,active:JSON.parse(JSON.stringify(a)),log:JSON.parse(JSON.stringify(S.logs[a.date])),at:Date.now()};
+  $('#undo-t').textContent='✓ '+label;$('#undo').classList.add('show');
+  clearTimeout(undoT);undoT=setTimeout(hideUndo,10000);
+}
+function hideUndo(){$('#undo').classList.remove('show');undoSnap=null;clearTimeout(undoT);}
+function doUndo(){
+  const u=undoSnap;hideUndo();
+  if(!u||Date.now()-u.at>10500)return;
+  const lg=sanLog(u.log);if(!lg)return;
+  S.logs[u.date]=lg;S.active=u.active;
+  try{window.speechSynthesis&&speechSynthesis.cancel();}catch(e){}
+  ui.workDate=u.date;ui.tab='work';commit(u.date);render();toast('↶ הסימון בוטל');
+}
+/* history & progressive overload */
+const sameEx=(x,it)=>(it.exId&&x.exId===it.exId)||(x.name===it.name&&x.group===it.group);
+function histFor(it,before){
+  const out=[];
+  for(const k of Object.keys(S.logs).sort().reverse()){
+    if(k>=before)continue;const m=S.logs[k].items.find(x=>sameEx(x,it)&&x.sets.length);
+    if(m){out.push({date:k,it:m});if(out.length>=2)break;}
+  }
+  return out;
+}
+const shortD=k=>{const [y,m,d]=k.split('-');return `${+d}.${+m}`;};
+function lastText(m){
+  if(isCardio(m.group)){const x=m.sets[m.sets.length-1];return cardioDesc({kind:m.t.kind,min:x.min,km:x.km,spd:x.spd,inc:x.inc,ivN:x.iv,ivW:m.t.ivW,ivR:m.t.ivR},1);}
+  const ws=m.sets.map(x=>x.w);
+  return ws.every(w=>w===ws[0])?`${m.sets.length} סטים × ${m.sets.map(x=>x.r).join('/')} חזרות · ${fmtN(ws[0],1)} ק״ג`:m.sets.map(x=>`${fmtN(x.w,1)}×${x.r}`).join(' , ');
+}
+function suggestFor(it,before){
+  const h=histFor(it,before);if(h.length<2)return null;
+  const full=x=>x.it.sets.length>=x.it.t.sets&&x.it.sets.every(s=>isCardio(x.it.group)?s.min>=x.it.t.min:s.r>=x.it.t.r);
+  if(!full(h[0])||!full(h[1]))return null;
+  if(isCardio(it.group)){
+    const sp=Math.max(...h[0].it.sets.map(x=>x.spd)),sp1=Math.max(...h[1].it.sets.map(x=>x.spd));
+    if(!sp||sp!==sp1||it.t.spd>sp)return null;
+    return {kind:'spd',v:Math.min(30,Math.round((sp+0.5)*10)/10),from:sp};
+  }
+  const w0=Math.max(...h[0].it.sets.map(x=>x.w)),w1=Math.max(...h[1].it.sets.map(x=>x.w));
+  if(!w0||w0!==w1||it.t.w>w0)return null;
+  const step=['legs','back'].includes(it.group)?5:2.5;
+  return {kind:'w',v:Math.min(1000,w0+step),from:w0,step};
+}
+function applySug(i){
+  const a=S.active,l=a&&S.logs[a.date],it=l&&l.items[i];if(!it||it.sets.length)return;
+  const sg=suggestFor(it,a.date);if(!sg)return;
+  const e=exById(it.exId);
+  if(sg.kind==='w'){it.t.w=sg.v;if(e)e.w=sg.v;}else{it.t.spd=sg.v;if(e)e.spd=sg.v;}
+  commit(a.date);render();toast(sg.kind==='w'?`📈 המשקל עודכן ל־${fmtN(sg.v,1)} ק״ג`:`📈 המהירות עודכנה ל־${fmtN(sg.v,1)} קמ״ש`);
+}
 function finishWorkout(auto){
   const a=S.active;if(!a)return;const l=S.logs[a.date];
   if(l)l.finishedAt=Date.now();
   const k=a.date;S.active=null;commit(k);render();
-  if(auto){beep(3);toast('🎉 האימון הושלם!');}
+  if(auto){beep(3);toast('🎉 האימון הושלם!');setTimeout(()=>say('כל הכבוד! האימון הושלם.'),1200);}
 }
 function advance(silent){
   const a=S.active;if(!a)return false;
+  if(a.phase==='cardio'&&Date.now()>=a.endsAt){
+    a.phase='cardioend';commit(a.date);if(!silent){beep(3);toast('⏱ הזמן הסתיים – אשר את סיום התרגיל');const it=S.logs[a.date]&&S.logs[a.date].items[a.idx];say(`הזמן הסתיים. אשר את סיום ה${it?KW[it.t.kind]||'תרגיל':'תרגיל'}`);}return true;
+  }
   if((a.phase==='rest'||a.phase==='exrest')&&Date.now()>=a.endsAt){
     if(a.phase==='exrest'){const l=S.logs[a.date];a.idx=Math.min(a.idx+1,l?l.items.length-1:0);}
     a.phase='ready';a.endsAt=0;
     commit(a.date);
-    if(!silent)beep(2);
+    if(!silent){beep(2);setTimeout(()=>sayNext(a),900);}
     return true;
   }
   return false;
 }
 /* change rest length during a running rest; countdown keeps its start point */
+const TIMED=['rest','exrest','cardio'];
 function setRest(sec,keep){
-  const a=S.active;if(!a||(a.phase!=='rest'&&a.phase!=='exrest'))return;
+  const a=S.active;if(!a||!TIMED.includes(a.phase))return;
   const start=a.endsAt-a.dur*1000;a.dur=sec;a.endsAt=start+sec*1000;
-  if(keep){if(a.phase==='rest'){const it=S.logs[a.date]&&S.logs[a.date].items[a.idx];if(it)it.rest=sec;}else S.settings.exRest=sec;}
-  commit(a.date);advance(false);render();toast(`המנוחה עודכנה ל־${mmss(sec)}`);
+  const it=S.logs[a.date]&&S.logs[a.date].items[a.idx];
+  if(keep){if(a.phase==='rest'){if(it)it.rest=sec;}else if(a.phase==='exrest')S.settings.exRest=sec;else if(it)it.t.min=Math.round(sec/60);}
+  commit(a.date);advance(false);render();toast(`${a.phase==='cardio'?'זמן התרגיל':'המנוחה'} עודכן ל־${mmss(sec)}`);
 }
 function setItemRest(i,sec){
   const a=S.active,l=a&&S.logs[a.date],it=l&&l.items[i];if(!it)return;
@@ -684,7 +887,7 @@ function openRestTimes(){
   h+=`<div class="actions"><button class="btn pri" data-a="close">סגור</button></div>`;
   openModal(h);
 }
-function adjRest(d){const a=S.active;if(!a||(a.phase!=='rest'&&a.phase!=='exrest'))return;
+function adjRest(d){const a=S.active;if(!a||!TIMED.includes(a.phase))return;
   const left=(a.endsAt-Date.now())/1000;const nd=Math.max(0,left+d);a.dur=Math.max(1,Math.round(a.dur+(nd-left)));a.endsAt=Date.now()+nd*1000;
   commit(a.date);if(advance(false))render();else{render();}}
 function skipRest(){const a=S.active;if(!a||!S.settings.allowSkip)return;a.endsAt=Date.now();if(advance(true))render();}
@@ -696,29 +899,37 @@ function renderWork(){
   const a=S.active&&S.active.date===k?S.active:null;
   const ds=l.items.reduce((x,i)=>x+i.sets.length,0),ts=l.items.reduce((x,i)=>x+i.t.sets,0);
   let h=`<div class="card"><div class="row"><h2 class="sp" style="margin:0">${esc(fmtLong(k))}</h2><span class="pill ${isComplete(l)?'g':'o'}">${isComplete(l)?'הושלם':l.finishedAt?'הסתיים חלקית':a?'בביצוע':'מושהה'}</span></div><div class="bar g"><div style="width:${ts?Math.round(ds/ts*100):0}%"></div></div><div class="row" style="margin-top:4px"><span class="mut sp">${ds}/${ts} סטים</span>${a?'<button class="btn sm" data-a="rest-times">⏱ זמני מנוחה</button>':''}</div></div>`;
-  if(a&&(a.phase==='rest'||a.phase==='exrest')){
-    const nxt=a.phase==='exrest'?l.items[a.idx+1]:null;
-    h+=`<div class="card timer"><div class="tl">${a.phase==='rest'?'מנוחה בין סטים · הסט הבא ייפתח בסיום':'כל הסטים בוצעו ✓ · מנוחה לפני התרגיל הבא'}</div><div class="tt" id="tt">--:--</div><div class="bar"><div id="tb" style="width:0%"></div></div>
+  if(a&&TIMED.includes(a.phase)){
+    const nxt=a.phase==='exrest'?l.items[a.idx+1]:null,cd=a.phase==='cardio',ci=l.items[a.idx];
+    h+=`<div class="card timer ${cd?'cardio':''}"><div class="tl">${cd?`${esc(KIND[ci.t.kind])} בביצוע · אישור הסיום ייפתח כשהטיימר יגיע ל־0`:a.phase==='rest'?'מנוחה בין סטים · הסט הבא ייפתח בסיום':'כל הסטים בוצעו ✓ · מנוחה לפני התרגיל הבא'}</div><div class="tt" id="tt">--:--</div><div class="bar"><div id="tb" style="width:0%"></div></div>
     <div class="row" style="justify-content:center;margin-top:10px">${[-60,-15,15,60].map(d=>`<button class="btn sm" data-a="rest-adj" data-v="${d}">${d>0?'+':'−'}${Math.abs(d)>=60?Math.abs(d)/60+' דק׳':Math.abs(d)+' שנ׳'}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:8px">${(a.phase==='rest'?[30,60,90,120,180]:[120,300,480,600,900]).map(v=>`<button class="btn sm ${v===a.dur?'pri':''}" data-a="rest-set" data-v="${v}">${a.phase==='rest'?mmss(v):v/60+' דק׳'}</button>`).join('')}</div>
-    <div class="row" style="justify-content:center;margin-top:8px"><label for="rest-total" style="margin:0">משך המנוחה הכולל:</label><input id="rest-total" data-rt="1" type="number" inputmode="numeric" min="0" max="${a.phase==='rest'?1800:60}" step="${a.phase==='rest'?5:0.5}" value="${a.phase==='rest'?a.dur:a.dur/60}" style="width:90px"><span class="mut">${a.phase==='rest'?'שניות':'דקות'}</span></div>
-    <label style="justify-content:center;display:flex;gap:6px;margin-top:6px"><input type="checkbox" id="rest-keep" style="width:auto" checked> ${a.phase==='rest'?'החל גם על שאר הסטים בתרגיל זה':'שמור כברירת מחדל למנוחה בין תרגילים'}</label>${nxt?`<div class="mut" style="margin-top:8px">הבא: <b>${esc(nxt.name)}</b>${nxt.machine?` · מכשיר ${esc(nxt.machine)}`:''}</div>`:''}${S.settings.allowSkip?'<button class="btn sm" style="margin-top:10px" data-a="skip">דלג על המנוחה</button>':''}</div>`;
+    <div class="row" style="justify-content:center;margin-top:8px">${(a.phase==='rest'?[30,60,90,120,180]:cd?[600,900,1200,1800,2700]:[120,300,480,600,900]).map(v=>`<button class="btn sm ${v===a.dur?'pri':''}" data-a="rest-set" data-v="${v}">${a.phase==='rest'?mmss(v):v/60+' דק׳'}</button>`).join('')}</div>
+    <div class="row" style="justify-content:center;margin-top:8px"><label for="rest-total" style="margin:0">${cd?'משך התרגיל הכולל:':'משך המנוחה הכולל:'}</label><input id="rest-total" data-rt="1" type="number" inputmode="numeric" min="0" max="${a.phase==='rest'?1800:cd?600:60}" step="${a.phase==='rest'?5:0.5}" value="${a.phase==='rest'?a.dur:a.dur/60}" style="width:90px"><span class="mut">${a.phase==='rest'?'שניות':'דקות'}</span></div>
+    <label style="justify-content:center;display:flex;gap:6px;margin-top:6px"><input type="checkbox" id="rest-keep" style="width:auto" checked> ${a.phase==='rest'?'החל גם על שאר הסטים בתרגיל זה':cd?'עדכן גם את הזמן המתוכנן':'שמור כברירת מחדל למנוחה בין תרגילים'}</label>${nxt?`<div class="mut" style="margin-top:8px">הבא: <b>${esc(nxt.name)}</b>${nxt.machine?` · מכשיר ${esc(nxt.machine)}`:''}</div>`:''}${S.settings.allowSkip?'<button class="btn sm" style="margin-top:10px" data-a="skip">דלג על המנוחה</button>':''}</div>`;
   }
   l.items.forEach((it,i)=>{
     const done=it.sets.length>=it.t.sets, cur=a&&a.idx===i, lock=a&&i>a.idx&&!done;
     const c=isCardio(it.group);
     h+=`<div class="wi ${cur?'cur':''} ${lock?'lock':''} ${done?'done':''}"><div class="row"><b class="sp">${i+1}. ${esc(it.name)}</b>${it.role?`<span class="pill o">${ROLE[it.role]}</span>`:''}<span class="pill">${esc(GN[it.group])}</span>${it.machine?`<span class="pill">מכשיר ${esc(it.machine)}</span>`:''}${done?'<span class="pill r">✓ בוצע</span>':lock?'<span>🔒</span>':`<span class="pill">${it.sets.length}/${it.t.sets}</span>`}</div>`;
     if(it.notes)h+=`<div class="mut">📝 ${esc(it.notes)}</div>`;
+    if(!done&&a){
+      const hs=histFor(it,k);
+      if(hs.length)h+=`<div class="last">↺ בפעם הקודמת (${shortD(hs[0].date)}): ${esc(lastText(hs[0].it))}</div>`;
+      if(cur&&!it.sets.length&&(a.phase==='ready')){const sg=suggestFor(it,k);
+        if(sg)h+=`<div class="sug">📈 <span class="sp">${sg.kind==='w'?`השלמת את כל הסטים פעמיים ב־${fmtN(sg.from,1)} ק״ג. מומלץ לעלות ל־<b>${fmtN(sg.v,1)} ק״ג</b>`:`השלמת את הזמן פעמיים ב־${fmtN(sg.from,1)} קמ״ש. מומלץ לעלות ל־<b>${fmtN(sg.v,1)} קמ״ש</b>`}</span><button class="btn sm pri" data-a="apply-sug" data-v="${i}">החל</button></div>`;}
+    }
     if(cur||done||(!a&&it.sets.length)){
       const hrRow=c&&(cur||done||it.hrB||it.hrA)?`<div class="grid2" style="margin-top:6px"><div><label for="hr-b-${i}">❤️ דופק לפני</label><input id="hr-b-${i}" data-hr="b" data-d="${k}" data-i="${i}" type="number" inputmode="numeric" min="30" max="250" placeholder="פעימות/דקה" value="${it.hrB||''}"></div>${done?`<div><label for="hr-a-${i}">❤️ דופק אחרי</label><input id="hr-a-${i}" data-hr="a" data-d="${k}" data-i="${i}" type="number" inputmode="numeric" min="30" max="250" placeholder="פעימות/דקה" value="${it.hrA||''}"></div>`:'<div class="mut" style="align-self:end;padding-bottom:10px">דופק אחרי – בסיום התרגיל</div>'}</div>`:'';
       if(c){
         h+='<div class="sets">';
         for(let s=0;s<it.t.sets;s++){
           const rec=it.sets[s],pre=it.t.sets>1?`סט ${s+1}: `:'';
-          if(rec)h+=`<div class="done-txt" style="margin:4px 0">✓ ${pre}${esc(cardioDesc({kind:it.t.kind,min:rec.min,km:rec.km,inc:rec.inc,ivN:rec.iv,ivW:it.t.ivW,ivR:it.t.ivR},1))}</div><div class="row" style="margin-bottom:6px"><label for="km-${i}-${s}" style="margin:0">📏 מרחק בפועל (ק״מ):</label><input id="km-${i}-${s}" data-km="1" data-d="${k}" data-i="${i}" data-s="${s}" type="number" inputmode="decimal" step="0.01" min="0" max="500" value="${rec.km}" style="width:110px"></div>`;
+          if(rec)h+=`<div class="done-txt" style="margin:4px 0">✓ ${pre}${esc(cardioDesc({kind:it.t.kind,min:rec.min,km:rec.km,spd:rec.spd,inc:rec.inc,ivN:rec.iv,ivW:it.t.ivW,ivR:it.t.ivR},1))}</div><div class="row" style="margin-bottom:6px"><label for="km-${i}-${s}" style="margin:0">📏 מרחק בפועל (ק״מ):</label><input id="km-${i}-${s}" data-km="1" data-d="${k}" data-i="${i}" data-s="${s}" type="number" inputmode="decimal" step="0.01" min="0" max="500" value="${rec.km}" style="width:110px"></div>`;
           else if(cur&&s===it.sets.length){
-            const en=a.phase==='ready',run=it.t.kind==='run';
-            h+=`<div class="grid2"><div><label for="in-min-${s}">זמן (דקות)</label><input id="in-min-${s}" type="number" inputmode="numeric" min="0" max="600" value="${it.t.min}"></div><div><label for="in-km-${s}">ק״מ</label><input id="in-km-${s}" type="number" inputmode="decimal" step="0.1" min="0" max="500" value="${it.t.km}"></div><div><label for="in-inc-${s}">שיפוע (%)</label><input id="in-inc-${s}" type="number" inputmode="decimal" step="0.5" min="0" max="40" value="${it.t.inc}"></div>${run?`<div><label for="in-iv-${s}">אינטרוולים${it.t.ivW?` (${it.t.ivW}/${it.t.ivR} שנ׳)`:''}</label><input id="in-iv-${s}" type="number" inputmode="numeric" min="0" max="50" value="${it.t.ivN}"></div>`:''}</div><button class="btn pri" style="width:100%;margin-top:8px" data-a="mark" ${en?'':'disabled'}>${en?`✓ סמן ${it.t.sets>1?`סט ${s+1} `:''}${esc(KIND[it.t.kind])} בוצעה`:'⏳ מנוחה'}</button>`;
+            const run=it.t.kind==='run',timed=needsCardioTimer(it),ended=a.phase==='cardioend',running=a.phase==='cardio';
+            const en=ended||(a.phase==='ready'&&!timed);
+            const mins=ended?Math.round(a.dur/60):it.t.min,kmv=it.t.km||(it.t.spd&&mins?Math.round(it.t.spd*mins/60*100)/100:0);
+            h+=`<div class="grid2"><div><label for="in-min-${s}">זמן (דקות)</label><input id="in-min-${s}" type="number" inputmode="numeric" min="0" max="600" value="${mins}" ${running?'disabled':''}></div><div><label for="in-km-${s}">ק״מ</label><input id="in-km-${s}" type="number" inputmode="decimal" step="0.1" min="0" max="500" value="${kmv}"></div><div><label for="in-spd-${s}">מהירות (קמ״ש)</label><input id="in-spd-${s}" type="number" inputmode="decimal" step="0.1" min="0" max="30" value="${it.t.spd||0}"></div><div><label for="in-inc-${s}">שיפוע (%)</label><input id="in-inc-${s}" type="number" inputmode="decimal" step="0.5" min="0" max="40" value="${it.t.inc}"></div>${run?`<div><label for="in-iv-${s}">אינטרוולים${it.t.ivW?` (${it.t.ivW}/${it.t.ivR} שנ׳)`:''}</label><input id="in-iv-${s}" type="number" inputmode="numeric" min="0" max="50" value="${it.t.ivN}"></div>`:''}</div>${timed&&a.phase==='ready'?`<button class="btn pri markbig" data-a="cardio-start">▶ התחל ${esc(KIND[it.t.kind])} – טיימר ${it.t.min} דק׳</button>`:`<button class="btn pri markbig" data-a="mark" ${en?'':'disabled'}>${en?`✓ אשר סיום ${it.t.sets>1?`סט ${s+1} – `:''}${esc(KIND[it.t.kind])}`:running?'⏱ הטיימר רץ – האישור ייפתח ב־0':'⏳ מנוחה'}</button>`}`;
           }else h+=`<div class="mut" style="margin:4px 0">🔒 ${pre}${esc(cardioDesc(it.t,1))}</div>`;
         }
         h+='</div>';
@@ -746,11 +957,14 @@ function renderWork(){
 }
 function updateTimer(){
   const a=S.active,ht=$('#hdrTimer');
-  if(ht){const on=a&&(a.phase==='rest'||a.phase==='exrest');ht.classList.toggle('show',!!on);if(on)ht.textContent='⏱ '+mmss((a.endsAt-Date.now())/1000);}
+  if(ht){const on=a&&TIMED.includes(a.phase);ht.classList.toggle('show',!!on);if(on)ht.textContent='⏱ '+mmss((a.endsAt-Date.now())/1000);}
   if(!a)return;
   if(advance(false)){render();return;}
   const tt=$('#tt');if(!tt)return;
   const left=(a.endsAt-Date.now())/1000;tt.textContent=mmss(left);
+  const warn=(thr,txt)=>{const key=a.endsAt+':'+thr;if(left<=thr&&left>thr-2&&!warned.has(key)){warned.add(key);say(txt);}};
+  if((a.phase==='cardio'||a.phase==='exrest')&&a.dur>90)warn(60,a.phase==='cardio'?'נותרה דקה':'עוד דקה לתרגיל הבא');
+  if(a.phase==='rest'&&a.dur>=30)warn(10,'עוד עשר שניות');
   const tb=$('#tb');if(tb)tb.style.width=(a.dur?Math.min(100,Math.max(0,(1-left/a.dur)*100)):0)+'%';
 }
 
@@ -879,18 +1093,30 @@ function openSettings(){
   <label for="s-age">גיל (לחישוב אזורי דופק, רשות)</label><input id="s-age" type="number" inputmode="numeric" min="0" max="100" value="${S.settings.age||''}">
   <label><input type="checkbox" id="s-skip" style="width:auto" ${S.settings.allowSkip?'checked':''}> אפשר דילוג על זמני מנוחה</label>
   <label><input type="checkbox" id="s-sound" style="width:auto" ${S.settings.sound?'checked':''}> צפצוף ורטט בסיום מנוחה</label>
+  <div class="row"><label class="sp" style="margin:8px 0"><input type="checkbox" id="s-voice" style="width:auto" ${S.settings.voice?'checked':''}> 🗣 הקראה קולית בעברית (סוף מנוחה, תרגיל הבא, זמן שנותר)</label><button class="btn sm" data-a="test-voice">בדיקה</button></div>
   <label for="s-vol">עוצמת צפצוף: <b id="s-vol-v">${S.settings.vol??100}%</b></label><div class="row"><input id="s-vol" type="range" min="0" max="100" step="5" value="${S.settings.vol??100}" class="sp"><button class="btn sm" data-a="test-beep">🔊 בדיקה</button></div>
   <p class="mut" style="margin:4px 0 0">העוצמה תלויה גם בעוצמת המדיה בטלפון. באייפון, מתג השקט מבטל צלילים.</p>
   <label>גודל טקסט</label><div class="row">${[[100,'רגיל'],[115,'גדול'],[130,'גדול מאוד']].map(([z,t])=>`<label class="pill" style="margin:0;padding:8px 14px;font-size:15px"><input type="radio" name="s-zoom" value="${z}" style="width:auto" ${S.settings.zoom===z?'checked':''}> ${t}</label>`).join('')}</div>
   <div class="actions"><button class="btn pri" data-a="set-save">שמור הגדרות</button></div>
   <h2 style="margin-top:20px">גיבוי ושחזור</h2>
   <p class="mut">${cloudOk?'הנתונים נשמרים בחשבון שלך באופן פרטי ובמכשיר.':'הנתונים נשמרים במכשיר זה. מומלץ לגבות מדי פעם.'}</p>
+  ${driveCapable()?cloudSettings():''}
   ${canDownload()?'<div class="actions"><button class="btn" data-a="bk-file">💾 שמור גיבוי לקובץ</button><button class="btn" data-a="bk-load">📂 טען גיבוי מקובץ</button></div>':'<div class="actions"><button class="btn" data-a="bk-load">📂 טען גיבוי מקובץ</button></div>'}
   <div class="actions"><button class="btn" data-a="bk-copy">📋 העתק גיבוי כטקסט</button><button class="btn" data-a="bk-import">📥 הדבק גיבוי</button></div>
   ${isStandalone()?'':'<p class="mut">עוברים לאפליקציה בטלפון? לחצו כאן <b>העתק גיבוי כטקסט</b>, ובאפליקציה: הגדרות ← <b>הדבק גיבוי</b>.</p>'}
   <div class="actions"><button class="btn danger" data-a="reset">🗑 מחק את כל הנתונים</button></div>`);
 }
 
+function cloudSettings(){
+  if(!GCID_RE.test(S.settings.gcid||''))return `<div class="card" style="background:var(--panel2);margin-top:10px"><h3>☁️ סנכרון ל-Google Drive</h3>
+  <p class="mut" style="margin:6px 0">הדבק כאן את ה-Client ID שקיבלת מ-Google Cloud (מסתיים ב-apps.googleusercontent.com).</p>
+  <input id="gcid" dir="ltr" autocomplete="off" spellcheck="false" placeholder="123456789-abc….apps.googleusercontent.com">
+  <div class="actions"><button class="btn pri" data-a="cloud-save-id">שמור והפעל</button></div></div>`;
+  return `<div class="card" style="background:var(--panel2);margin-top:10px"><h3>☁️ סנכרון ל-Google Drive</h3>
+  <p class="mut" style="margin:6px 0">${driveLive()?`מחובר. סנכרון אוטומטי אחרי כל שינוי.${gd.last?' סנכרון אחרון: '+new Date(gd.last).toLocaleTimeString('he-IL',{hour:'2-digit',minute:'2-digit'}):''}`:'לא מחובר כרגע. לחץ "התחבר וסנכרן" (נדרש פעם בשעה בערך).'} הנתונים נשמרים בתיקייה מוסתרת בחשבון הגוגל שלך – האפליקציה לא רואה קבצים אחרים.</p>
+  <div class="actions"><button class="btn pri" data-a="cloud-sync">☁️ ${driveLive()?'סנכרן עכשיו':'התחבר וסנכרן'}</button>${S.settings.gconn||driveLive()?'<button class="btn" data-a="cloud-off">נתק</button>':''}</div>
+  <div class="actions"><button class="btn sm" data-a="cloud-reset-id">שנה Client ID</button></div></div>`;
+}
 function openHelp(){
   openModal(`<div class="mh"><h2>❓ איך משתמשים</h2><button class="ico" data-a="close" aria-label="סגור">✕</button></div>
   <h3>1. תרגילים 💪</h3><p class="mut">מוסיפים תרגילים לפי קבוצת שריר (עד 5 בכל קבוצה): סטים, חזרות, משקל, מנוחה בין סטים, מספר מכשיר והערות. בסיבולת לב ריאה בוחרים הליכה או ריצה.</p>
@@ -977,6 +1203,7 @@ const actions={
   mark:()=>markSet(),
   skip:()=>skipRest(),
   'rest-adj':v=>adjRest(int(v,-600,600,0)),
+  'cardio-start':()=>cardioStart(),
   'rest-set':v=>{const k=$('#rest-keep');setRest(int(v,0,3600,90),!!(k&&k.checked));},
   'er-preset':v=>{if(!S.active)return;setExRest(int(v,0,3600,600));const e=$('#rt-er');if(e)e.value=S.settings.exRest/60;},
   'rest-times':()=>openRestTimes(),
@@ -984,10 +1211,18 @@ const actions={
   'reload-app':()=>{try{navigator.serviceWorker.getRegistration().then(r=>{if(r&&r.waiting){navigator.serviceWorker.addEventListener('controllerchange',()=>location.reload());r.waiting.postMessage('skip');}else location.reload();});}catch(e){location.reload();}},
   'bk-file':()=>{try{const blob=new Blob([JSON.stringify(S)],{type:'application/json'}),u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download='gym-backup-'+todayKey()+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000);toast('הגיבוי נשמר בתיקיית ההורדות');}catch(e){toast('לא ניתן לשמור קובץ כאן – השתמש בהעתקה');}},
   'bk-load':()=>{const f=$('#bkfile');f.value='';f.click();},
+  'cloud-sync':()=>{if(!driveOK()){openSettings();return;}if(driveLive())driveSync(true);else driveConnect();},
+  'cloud-save-id':()=>{const v=($('#gcid').value||'').trim();if(!GCID_RE.test(v)){toast('Client ID לא תקין – בדוק שהעתקת את כולו');return;}
+    S.settings.gcid=v;S.settings.gconn=false;gd.client=null;commit();loadGIS().catch(()=>{});cloudChip();openSettings();toast('נשמר. לחץ "התחבר וסנכרן"');},
+  'cloud-off':()=>confirmBox('לנתק את הסנכרון? הנתונים יישארו בטלפון וב-Drive.','נתק',()=>{driveDisconnect();toast('הסנכרון נותק');}),
+  'cloud-reset-id':()=>confirmBox('להסיר את ה-Client ID ולהגדיר מחדש?','הסר',()=>{driveDisconnect();S.settings.gcid='';commit();const el=$('#sync');el.removeAttribute('data-a');el.removeAttribute('role');setSync('💾 במכשיר');openSettings();}),
+  undo:()=>doUndo(),
+  'test-voice':()=>{say('בדיקת הקראה. המנוחה הסתיימה. סט 2 מתוך 3.',true);if(!window.speechSynthesis)toast('הדפדפן לא תומך בהקראה קולית');},
+  'apply-sug':v=>applySug(int(v,0,MAX_PLAN_ITEMS,-1)),
   'test-beep':()=>{unlockAudio();const v=$('#s-vol');const old=S.settings.vol;if(v)S.settings.vol=int(v.value,0,100,100);beep(2);S.settings.vol=old;},
-  end:()=>confirmBox('לסיים את האימון עכשיו? הסטים שלא סומנו לא ייספרו.','סיים',()=>finishWorkout(false)),
+  end:()=>confirmBox('לסיים את האימון עכשיו? הסטים שלא סומנו לא ייספרו.','סיים',()=>{takeUndo('האימון הסתיים');finishWorkout(false);}),
   'sum-m':v=>{ui.sumM+=Number(v);if(ui.sumM<0){ui.sumM=11;ui.sumY--;}if(ui.sumM>11){ui.sumM=0;ui.sumY++;}render();},
-  'set-save':()=>{S.settings.exRest=Math.round(num($('#s-exrest').value,0,60,10)*60);S.settings.allowSkip=$('#s-skip').checked;S.settings.sound=$('#s-sound').checked;S.settings.vol=int($('#s-vol').value,0,100,100);const zr=document.querySelector('input[name=s-zoom]:checked');S.settings.zoom=zr?int(zr.value,100,130,100):S.settings.zoom;const ag=int($('#s-age').value,0,100,0);S.settings.age=ag>=10?ag:0;commit();closeModal();render();toast('ההגדרות נשמרו');},
+  'set-save':()=>{S.settings.exRest=Math.round(num($('#s-exrest').value,0,60,10)*60);S.settings.allowSkip=$('#s-skip').checked;S.settings.sound=$('#s-sound').checked;S.settings.voice=$('#s-voice').checked;S.settings.vol=int($('#s-vol').value,0,100,100);const zr=document.querySelector('input[name=s-zoom]:checked');S.settings.zoom=zr?int(zr.value,100,130,100):S.settings.zoom;const ag=int($('#s-age').value,0,100,0);S.settings.age=ag>=10?ag:0;commit();closeModal();render();toast('ההגדרות נשמרו');},
   'bk-copy':async()=>{const t=JSON.stringify(S);try{await navigator.clipboard.writeText(t);toast('הגיבוי הועתק – הדבק אותו בפתק או במייל');}catch(e){openModal(`<div class="mh"><h2>גיבוי</h2><button class="ico" data-a="close">✕</button></div><p class="mut">העתק את הטקסט ידנית:</p><textarea readonly style="min-height:200px">${esc(t)}</textarea>`);}},
   'bk-import':()=>openModal(`<div class="mh"><h2>שחזור מגיבוי</h2><button class="ico" data-a="close">✕</button></div><p class="mut">הדבק כאן טקסט גיבוי. הנתונים הנוכחיים יוחלפו.</p><textarea id="bkt" style="min-height:160px"></textarea><div class="actions"><button class="btn" data-a="close">ביטול</button><button class="btn pri" data-a="bk-import-ok">שחזר</button></div>`),
   'bk-import-ok':()=>{const raw=$('#bkt').value;if(raw.length>5e6){toast('הקובץ גדול מדי');return;}let x;try{x=JSON.parse(raw);}catch(e){toast('טקסט גיבוי לא תקין');return;}
@@ -1006,9 +1241,10 @@ document.addEventListener('change',ev=>{
   if(t.id==='f-group'||t.name==='f-kind')toggleCardioFields();
   if(t.dataset&&t.dataset.hr){savePulse(t);}
   if(t.dataset&&t.dataset.km){saveKm(t);}
+  if(t.id==='f-spd'||t.id==='f-min'||t.id==='f-km')estDist();
   if(t.id==='s-vol'){const v=$('#s-vol-v');if(v)v.textContent=int(t.value,0,100,100)+'%';}
   if(t.dataset&&t.dataset.rt){const a=S.active;if(!a)return;const keep=$('#rest-keep')&&$('#rest-keep').checked;
-    const sec=a.phase==='rest'?int(t.value,0,1800,a.dur):Math.round(num(t.value,0,60,a.dur/60)*60);setRest(sec,keep);}
+    const sec=a.phase==='rest'?int(t.value,0,1800,a.dur):Math.round(num(t.value,0,a.phase==='cardio'?600:60,a.dur/60)*60);setRest(sec,keep);}
   if(t.dataset&&t.dataset.er){if(!S.active)return;setExRest(Math.round(num(t.value,0,60,S.settings.exRest/60)*60));}
   if(t.dataset&&t.dataset.ir){if(!S.active)return;const i=int(t.dataset.i,0,MAX_PLAN_ITEMS,-1);if(i<0)return;setItemRest(i,int(t.value,0,1800,90));}
   if(t.dataset&&t.dataset.cs&&modalCtx&&(t.dataset.cs==='warm'||t.dataset.cs==='cool')){const e=exById(t.value);modalCtx[t.dataset.cs]=e&&isCardio(e.group)?e.id:'';refreshItems();}
@@ -1031,6 +1267,7 @@ if(S.active&&(S.active.phase==='rest'||S.active.phase==='exrest')&&Date.now()>=S
 render();
 initCloud();
 initPWA();
+if(driveOK()){cloudChip();loadGIS().catch(()=>{});}
 if(location.protocol==='file:'||location.hostname==='localhost'||location.hostname==='127.0.0.1')window.__gym={get S(){return S;},ui,sanState,esc}; /* test hook: local only */
 })();
 </script>

@@ -16,6 +16,18 @@
 ### גיבוי
 הנתונים נשמרים בטלפון בלבד. מומלץ מדי פעם: ⚙️ ← **שמור גיבוי לקובץ**. הקובץ נשמר בתיקיית ההורדות. לשחזור: **טען גיבוי מקובץ**.
 
+### סנכרון לענן (Google Drive)
+- הנתונים נשמרים בתיקייה מוסתרת (appDataFolder) בחשבון ה־Google שלך.
+- ההרשאה היחידה היא `drive.appdata`, ולכן האפליקציה לא רואה קבצים אחרים ב־Drive.
+- **הפעלה:** ⚙️ ← מדביקים את ה־Client ID ← "שמור והפעל" ← "התחבר וסנכרן".
+- **סנכרון אוטומטי:** אחרי כל שינוי, כל עוד יש חיבור. ההתחברות תקפה כשעה. אחר כך לוחצים על "☁️ סנכרן" בכותרת.
+- **מיזוג בין מכשירים:** ההגדרות והתכנון נלקחים מהמכשיר שעודכן אחרון. אימונים משני המכשירים נשמרים. אם אותו יום אימון קיים בשניהם, נשמרת הגרסה עם יותר סטים.
+- **פרטי ההגדרה ב־Google Cloud:**
+  - Google Auth Platform ← Clients ← Web application.
+  - Authorized JavaScript origin: `https://yarivbrabbing-lang.github.io`
+  - Drive API מופעל.
+  - Audience: External ← Testing, והמשתמש מוגדר כ־Test user.
+
 ## מה יש באפליקציה
 - **תרגילים**: 7 קבוצות שריר, עד 5 תרגילים בכל קבוצה. לכל תרגיל: סטים, חזרות, משקל, מנוחה בין סטים, מספר מכשיר והערות.
 - **סיבולת לב ריאה**:
@@ -71,8 +83,9 @@
 ## הרצת בדיקות
 ```bash
 pip install playwright && python -m playwright install chromium
-python tests/test_flow.py "$PWD/index.html"     # זרימה מלאה (78 בדיקות)
-python tests/test_edge.py "$PWD/index.html"     # מקרי קצה ואבטחה (25 בדיקות)
+python tests/test_flow.py "$PWD/index.html"     # זרימה מלאה (86 בדיקות)
+python tests/test_edge.py "$PWD/index.html"     # מקרי קצה ואבטחה (30 בדיקות)
 python -m http.server 8765 &                    # שרת מקומי לבדיקת PWA
 python tests/test_pwa.py                         # התקנה, אופליין, גיבוי לקובץ (11 בדיקות)
+python tests/test_cloud.py                       # סנכרון Drive עם Google מדומה (23 בדיקות)
 ```
