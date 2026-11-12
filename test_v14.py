@@ -91,13 +91,12 @@ with sync_playwright() as p:
     check('summary: per-exercise weight change (chest 60 vs 57.5)', '▲ +2.5 ק״ג' in txt)
     dur_final = L('.finishedAt') - L('.startedAt')
     check('duration stops at finish', abs(dur_final - 65000) < 30000)
-    d1 = pg.inner_text('#wdur'); pg.wait_for_timeout(1300)
-    check('finished duration no longer ticks', pg.inner_text('#wdur') == d1)
+    d1 = pg.inner_text('#view .dur'); pg.wait_for_timeout(1300)
+    check('finished duration no longer ticks', pg.inner_text('#view .dur') == d1)
     pg.screenshot(path='tests/out/v14_summary.png', full_page=True)
     pg.click('nav [data-a=tab][data-v=cal]'); act(pg, 'day', k); pg.wait_for_timeout(200)
     pg.click('#md [data-a=day-sum]'); pg.wait_for_timeout(200)
-    check('day modal -> workout summary', 'סיכום אימון' in pg.inner_text('#md') and 'פירוט תרגילים' in pg.inner_text('#md'))
-    act(pg, 'close')
+    check('day modal -> daily summary tab', pg.evaluate('__gym.ui.tab') == 'day' and 'פירוט תרגילים' in pg.inner_text('#view'))
 
     # ---- comparisons & charts ----
     pg.click('nav [data-a=tab][data-v=sum]'); pg.wait_for_timeout(300)
@@ -118,8 +117,8 @@ with sync_playwright() as p:
     pg.evaluate("(()=>{const s=document.getElementById('cmpA');const o=document.createElement('option');o.value='<x>';s.appendChild(o);s.value='<x>';s.dispatchEvent(new Event('change',{bubbles:true}));})()")
     check('tampered comparison value ignored', pg.input_value('#cmpA') == keys[-1])
     act(pg, 'day-sum', k); pg.wait_for_timeout(200)
-    check('names escaped in summary (literal text, no injected tag)', 'חתירה<b>' in pg.inner_text('#md') and pg.evaluate("[...document.querySelectorAll('#md b')].every(x=>!x.textContent.includes('חתירה'))"))
-    act(pg, 'close')
+    check('names escaped in summary (tag shown as literal text)', 'חתירה<b>' in pg.inner_text('#view') and pg.evaluate("[...document.querySelectorAll('#view b b')].length")==0)
+    pg.click('nav [data-a=tab][data-v=sum]'); pg.wait_for_timeout(200)
     pg.screenshot(path='tests/out/v14_compare.png', full_page=True)
 
     # ---- cardio running: switching blocked ----
