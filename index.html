@@ -38,7 +38,7 @@ header h1{font-size:19px;margin:0;flex:1;min-width:0;white-space:nowrap;overflow
 #hdrTimer.show~#sync{display:none}
 #sync{font-size:12px;color:var(--mut);background:none;border:0;font-family:inherit;padding:6px 4px}
 #sync[data-a]{cursor:pointer;color:var(--blue);text-decoration:underline}
-main{max-width:760px;margin:0 auto;padding:12px}
+main{max-width:760px;margin:0 auto;padding:12px 12px 80px}
 nav{position:fixed;bottom:0;left:0;right:0;z-index:6;display:flex;background:var(--panel);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
 nav button{flex:1;background:none;border:0;color:var(--mut);padding:9px 0 8px;font-size:14px;font-family:inherit;min-height:58px;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer}
 nav button .i{font-size:22px}
@@ -93,6 +93,20 @@ label{display:block;font-size:13px;color:var(--mut);margin:8px 0 4px}
 .wi.lock{opacity:.55}
 .wi.done{border-color:var(--bad);background:#2b1517}
 .wi.done>.row b{color:#ff8a8a}
+.wi.skip{border-color:var(--warn);background:#2b2410}
+.wi.skip>.row b{color:#ffc766}
+.wi.done.wasskip{border-color:var(--acc);background:#11291e}
+.wi.done.wasskip>.row b{color:#7ee8b2}
+.pill.k{color:#2a1a00;background:var(--warn);border-color:var(--warn)}
+.pill.gg{color:#04210f;background:var(--acc);border-color:var(--acc)}
+.go{margin-top:8px}
+.chart{width:100%;height:auto;display:block;direction:ltr}
+.chart .hit{cursor:pointer}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--mut);margin:4px 0 2px}
+.lg i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-inline-end:5px}
+.tip{min-height:20px;font-size:13px;color:var(--txt);margin-top:2px}
+details.tbl summary{cursor:pointer;color:var(--mut);font-size:13px;margin-top:6px}
+.dur{font-variant-numeric:tabular-nums;font-weight:800}
 .pill.r{color:#fff;background:var(--bad);border-color:var(--bad)}
 .done-txt{color:var(--bad)!important;font-weight:600}
 .sets{margin-top:8px}
@@ -133,7 +147,7 @@ td.n,th.n{text-align:left;font-variant-numeric:tabular-nums}
 #undo.show{display:flex}#undo .btn{background:var(--warn);color:#2a1a00;border-color:var(--warn);font-weight:800}
 .last{font-size:14px;color:var(--mut);margin-top:4px}
 .sug{margin-top:8px;padding:8px 10px;border-radius:10px;background:#122a3d;border:1px solid var(--blue);font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-#toast{position:fixed;bottom:146px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;z-index:30;display:none}
+#toast{pointer-events:none;position:fixed;bottom:146px;left:50%;transform:translateX(-50%);background:#000c;color:#fff;padding:9px 16px;border-radius:99px;font-size:14px;z-index:30;display:none}
 .empty-msg{text-align:center;color:var(--mut);padding:20px 8px}
 </style>
 </head>
@@ -220,7 +234,7 @@ function sanLogItem(it){
   const t=it.t&&typeof it.t==='object'?it.t:{};
   return {exId:ID_RE.test(it.exId)?it.exId:'',name:str(it.name,60)||'תרגיל',group:it.group,machine:str(it.machine,20),notes:str(it.notes,300),rest:int(it.rest,0,1800,90),
     t:{sets:int(t.sets,1,10,3),w:num(t.w,0,1000,0),r:int(t.r,0,200,10),km:num(t.km,0,500,0),min:int(t.min,0,600,0),...sanCardio(t)},
-    hrB:it.group==='cardio'?hr(it.hrB):0,hrA:it.group==='cardio'?hr(it.hrA):0,role:it.role==='warm'||it.role==='cool'?it.role:'',
+    hrB:it.group==='cardio'?hr(it.hrB):0,hrA:it.group==='cardio'?hr(it.hrA):0,role:it.role==='warm'||it.role==='cool'?it.role:'',skipped:it.skipped===true,
     sets:(Array.isArray(it.sets)?it.sets:[]).slice(0,10).map(sanSet).filter(Boolean)};
 }
 function sanLog(l){
@@ -241,7 +255,7 @@ function sanState(x){
   s.settings={exRest:int(st.exRest,0,3600,600),allowSkip:st.allowSkip===true,sound:st.sound!==false,vol:int(st.vol,0,100,100),zoom:[100,115,130].includes(st.zoom)?st.zoom:100,age:int(st.age,0,100,0),voice:st.voice!==false,gcid:typeof st.gcid==='string'&&GCID_RE.test(st.gcid)?st.gcid:'',gconn:st.gconn===true};
   const a=x.active;
   if(a&&typeof a==='object'&&DATE_RE.test(a.date)&&['ready','rest','exrest','cardio','cardioend'].includes(a.phase)&&s.logs[a.date])
-    s.active={date:a.date,idx:int(a.idx,0,MAX_PLAN_ITEMS-1,0),phase:a.phase,endsAt:int(a.endsAt,0,9e15,0),dur:int(a.dur,0,3600,0)};
+    s.active={date:a.date,idx:int(a.idx,0,MAX_PLAN_ITEMS-1,0),phase:a.phase,endsAt:int(a.endsAt,0,9e15,0),dur:int(a.dur,0,36000,0),next:Number.isInteger(a.next)&&a.next>=0&&a.next<MAX_PLAN_ITEMS?a.next:null};
   s.updatedAt=int(x.updatedAt,0,9e15,0);
   return s;
 }
@@ -545,7 +559,7 @@ function openDay(k){
   const p=S.plans[k],l=S.logs[k],st=dayStatus(k);
   let h=`<div class="mh"><h2>${esc(fmtLong(k))}</h2><button class="ico" data-a="close" aria-label="סגור">✕</button></div>`;
   if(l){const ds=l.items.reduce((a,i)=>a+i.sets.length,0),ts=l.items.reduce((a,i)=>a+i.t.sets,0);
-    h+=`<p><span class="pill ${st==='done'?'g':'o'}">${st==='done'?'האימון הושלם':l.finishedAt?'הסתיים חלקית':'אימון חלקי'}</span> <span class="mut">${ds}/${ts} סטים</span></p>`;}
+    h+=`<p><span class="pill ${st==='done'?'g':'o'}">${st==='done'?'האימון הושלם':l.finishedAt?'הסתיים חלקית':'אימון חלקי'}</span> <span class="mut">${ds}/${ts} סטים${durOf(l)?' · ⏱ '+hms(durOf(l)):''}</span></p>${ds?`<button class="btn" style="width:100%;margin-bottom:8px" data-a="day-sum" data-v="${k}">📋 סיכום האימון</button>`:''}`;}
   if(p){h+=`<div class="card">${p.name?`<h3 style="margin-bottom:6px">${esc(p.name)}</h3>`:''}${planItemsHtml(p)}</div>`;
     h+=`<button class="btn big pri" data-a="start" data-v="${k}">${l&&!l.finishedAt?'▶ המשך אימון':l?'👁 צפה באימון':'▶ התחל אימון'}</button>`;
     h+=`<div class="actions"><button class="btn" data-a="plan-edit" data-v="${k}">✏️ ערוך</button><button class="btn" data-a="plan-move" data-v="${k}">📅 העבר</button><button class="btn" data-a="plan-repeat" data-v="${k}">🔁 חזור</button><button class="btn danger" data-a="plan-del" data-v="${k}">🗑 מחק</button></div>`;
@@ -771,7 +785,7 @@ function markSet(){
   const l=S.logs[a.date];if(!l)return;const it=l.items[a.idx];if(!it||it.sets.length>=it.t.sets)return;
   const ok=a.phase==='cardioend'||(a.phase==='ready'&&!needsCardioTimer(it));
   if(!ok)return;
-  const lastOfAll=it.sets.length+1>=it.t.sets&&a.idx===l.items.length-1;
+  const lastOfAll=it.sets.length+1>=it.t.sets&&l.items.every((x,j)=>j===a.idx||itDone(x));
   takeUndo(lastOfAll?'האימון הושלם':isCardio(it.group)?`${it.name} – סיום אושר`:`סט ${it.sets.length+1} סומן – ${it.name}`);
   unlockAudio();
   const d=curDraft(it.sets.length);
@@ -779,9 +793,23 @@ function markSet(){
   const hb=document.getElementById('hr-b-'+a.idx);if(isCardio(it.group)&&hb&&hb.value&&!it.hrB)it.hrB=hr(hb.value);
   it.sets.push(s);
   if(it.sets.length<it.t.sets){a.phase='rest';a.dur=it.rest;a.endsAt=Date.now()+it.rest*1000;}
-  else if(a.idx<l.items.length-1){a.phase='exrest';a.dur=S.settings.exRest;a.endsAt=Date.now()+S.settings.exRest*1000;}
+  else if(nextTarget(l,a)>=0){a.phase='exrest';a.dur=S.settings.exRest;a.endsAt=Date.now()+S.settings.exRest*1000;}
   else{finishWorkout(true);return;}
   commit(a.date);render();
+}
+/* free navigation between exercises: rest timings unchanged, a switch requested during a rest is applied when it ends */
+const itDone=it=>it.sets.length>=it.t.sets;
+function nextPending(l,from){const n=l.items.length;for(let s=1;s<n;s++){const j=(from+s)%n;if(!itDone(l.items[j]))return j;}return -1;}
+function nextTarget(l,a){return a.next!=null&&a.next!==a.idx&&l.items[a.next]&&!itDone(l.items[a.next])?a.next:nextPending(l,a.idx);}
+function goEx(i){
+  const a=S.active,l=a&&S.logs[a.date];if(!l||!l.items[i]||itDone(l.items[i])||i===a.idx&&a.phase==='ready')return;
+  if(a.phase==='cardio'||a.phase==='cardioend'){toast('סיים ואשר קודם את תרגיל האירובי');return;}
+  if(a.phase==='rest'||a.phase==='exrest'){
+    a.next=a.next===i?null:i;commit(a.date);render();
+    toast(a.next===i?`⏭ בסיום המנוחה ייפתח: ${l.items[i].name}`:'הבחירה בוטלה');return;
+  }
+  const cur=l.items[a.idx];if(cur&&!itDone(cur))cur.skipped=true;
+  a.idx=i;a.next=null;commit(a.date);render();say(`עברת ל${l.items[i].name}`);toast(`⏭ עברת ל: ${l.items[i].name}`);
 }
 /* one-level undo for the last mark / finish (10 seconds) */
 let undoSnap=null,undoT=null;
@@ -841,7 +869,8 @@ function finishWorkout(auto){
   const a=S.active;if(!a)return;const l=S.logs[a.date];
   if(l)l.finishedAt=Date.now();
   const k=a.date;S.active=null;commit(k);render();
-  if(auto){beep(3);toast('🎉 האימון הושלם!');setTimeout(()=>say('כל הכבוד! האימון הושלם.'),1200);}
+  ui.workDate=k;
+  if(auto){beep(3);toast('🎉 האימון הושלם! הסיכום מוצג למעלה');setTimeout(()=>say('כל הכבוד! האימון הושלם.'),1200);}
 }
 function advance(silent){
   const a=S.active;if(!a)return false;
@@ -849,7 +878,9 @@ function advance(silent){
     a.phase='cardioend';commit(a.date);if(!silent){beep(3);toast('⏱ הזמן הסתיים – אשר את סיום התרגיל');const it=S.logs[a.date]&&S.logs[a.date].items[a.idx];say(`הזמן הסתיים. אשר את סיום ה${it?KW[it.t.kind]||'תרגיל':'תרגיל'}`);}return true;
   }
   if((a.phase==='rest'||a.phase==='exrest')&&Date.now()>=a.endsAt){
-    if(a.phase==='exrest'){const l=S.logs[a.date];a.idx=Math.min(a.idx+1,l?l.items.length-1:0);}
+    const l=S.logs[a.date];
+    if(a.phase==='exrest'&&l){const nx=nextTarget(l,a);if(nx>=0)a.idx=nx;a.next=null;}
+    else if(a.phase==='rest'&&l&&a.next!=null&&a.next!==a.idx&&l.items[a.next]&&!itDone(l.items[a.next])){const cur=l.items[a.idx];if(cur&&!itDone(cur))cur.skipped=true;a.idx=a.next;a.next=null;}
     a.phase='ready';a.endsAt=0;
     commit(a.date);
     if(!silent){beep(2);setTimeout(()=>sayNext(a),900);}
@@ -898,9 +929,11 @@ function renderWork(){
   if(!l)return `<div class="card"><h2>${esc(fmtLong(k))}</h2>${planItemsHtml(S.plans[k])}</div><button class="btn big pri" data-a="start" data-v="${k}">▶ התחל אימון</button>`;
   const a=S.active&&S.active.date===k?S.active:null;
   const ds=l.items.reduce((x,i)=>x+i.sets.length,0),ts=l.items.reduce((x,i)=>x+i.t.sets,0);
-  let h=`<div class="card"><div class="row"><h2 class="sp" style="margin:0">${esc(fmtLong(k))}</h2><span class="pill ${isComplete(l)?'g':'o'}">${isComplete(l)?'הושלם':l.finishedAt?'הסתיים חלקית':a?'בביצוע':'מושהה'}</span></div><div class="bar g"><div style="width:${ts?Math.round(ds/ts*100):0}%"></div></div><div class="row" style="margin-top:4px"><span class="mut sp">${ds}/${ts} סטים</span>${a?'<button class="btn sm" data-a="rest-times">⏱ זמני מנוחה</button>':''}</div></div>`;
+  let h=`<div class="card"><div class="row"><h2 class="sp" style="margin:0">${esc(fmtLong(k))}</h2><span class="pill ${isComplete(l)?'g':'o'}">${isComplete(l)?'הושלם':l.finishedAt?'הסתיים חלקית':a?'בביצוע':'מושהה'}</span></div><div class="bar g"><div style="width:${ts?Math.round(ds/ts*100):0}%"></div></div><div class="row" style="margin-top:4px"><span class="mut sp">${ds}/${ts} סטים</span>${a?'<button class="btn sm" data-a="rest-times">⏱ זמני מנוחה</button>':''}</div>
+  ${l.startedAt>1e12?`<div class="row" style="margin-top:6px"><span>⏱ משך האימון:</span><span class="dur" id="wdur">${hms(durOf(l))}</span>${l.finishedAt?'<span class="mut">(הסתיים)</span>':''}</div>`:''}</div>`;
+  if(l.finishedAt&&!a)h+=`<div class="card" style="border-color:var(--acc2)"><h2>📋 סיכום האימון</h2>${workoutSummaryHtml(k)}</div>`;
   if(a&&TIMED.includes(a.phase)){
-    const nxt=a.phase==='exrest'?l.items[a.idx+1]:null,cd=a.phase==='cardio',ci=l.items[a.idx];
+    const nt=a.phase==='exrest'?nextTarget(l,a):(a.next!=null?a.next:-1),nxt=nt>=0?l.items[nt]:null,cd=a.phase==='cardio',ci=l.items[a.idx];
     h+=`<div class="card timer ${cd?'cardio':''}"><div class="tl">${cd?`${esc(KIND[ci.t.kind])} בביצוע · אישור הסיום ייפתח כשהטיימר יגיע ל־0`:a.phase==='rest'?'מנוחה בין סטים · הסט הבא ייפתח בסיום':'כל הסטים בוצעו ✓ · מנוחה לפני התרגיל הבא'}</div><div class="tt" id="tt">--:--</div><div class="bar"><div id="tb" style="width:0%"></div></div>
     <div class="row" style="justify-content:center;margin-top:10px">${[-60,-15,15,60].map(d=>`<button class="btn sm" data-a="rest-adj" data-v="${d}">${d>0?'+':'−'}${Math.abs(d)>=60?Math.abs(d)/60+' דק׳':Math.abs(d)+' שנ׳'}</button>`).join('')}</div>
     <div class="row" style="justify-content:center;margin-top:8px">${(a.phase==='rest'?[30,60,90,120,180]:cd?[600,900,1200,1800,2700]:[120,300,480,600,900]).map(v=>`<button class="btn sm ${v===a.dur?'pri':''}" data-a="rest-set" data-v="${v}">${a.phase==='rest'?mmss(v):v/60+' דק׳'}</button>`).join('')}</div>
@@ -908,9 +941,10 @@ function renderWork(){
     <label style="justify-content:center;display:flex;gap:6px;margin-top:6px"><input type="checkbox" id="rest-keep" style="width:auto" checked> ${a.phase==='rest'?'החל גם על שאר הסטים בתרגיל זה':cd?'עדכן גם את הזמן המתוכנן':'שמור כברירת מחדל למנוחה בין תרגילים'}</label>${nxt?`<div class="mut" style="margin-top:8px">הבא: <b>${esc(nxt.name)}</b>${nxt.machine?` · מכשיר ${esc(nxt.machine)}`:''}</div>`:''}${S.settings.allowSkip?'<button class="btn sm" style="margin-top:10px" data-a="skip">דלג על המנוחה</button>':''}</div>`;
   }
   l.items.forEach((it,i)=>{
-    const done=it.sets.length>=it.t.sets, cur=a&&a.idx===i, lock=a&&i>a.idx&&!done;
+    const done=itDone(it), cur=a&&a.idx===i, skip=it.skipped&&!done&&!cur, queued=a&&a.next===i;
     const c=isCardio(it.group);
-    h+=`<div class="wi ${cur?'cur':''} ${lock?'lock':''} ${done?'done':''}"><div class="row"><b class="sp">${i+1}. ${esc(it.name)}</b>${it.role?`<span class="pill o">${ROLE[it.role]}</span>`:''}<span class="pill">${esc(GN[it.group])}</span>${it.machine?`<span class="pill">מכשיר ${esc(it.machine)}</span>`:''}${done?'<span class="pill r">✓ בוצע</span>':lock?'<span>🔒</span>':`<span class="pill">${it.sets.length}/${it.t.sets}</span>`}</div>`;
+    h+=`<div class="wi ${cur?'cur':''} ${skip?'skip':''} ${done?'done':''} ${done&&it.skipped?'wasskip':''}"><div class="row"><b class="sp">${i+1}. ${esc(it.name)}</b>${it.role?`<span class="pill o">${ROLE[it.role]}</span>`:''}<span class="pill">${esc(GN[it.group])}</span>${it.machine?`<span class="pill">מכשיר ${esc(it.machine)}</span>`:''}${done?(it.skipped?'<span class="pill gg">✓ בוצע (אחרי דילוג)</span>':'<span class="pill r">✓ בוצע</span>'):skip?`<span class="pill k">⏭ דולג · ${it.sets.length}/${it.t.sets}</span>`:`<span class="pill">${it.sets.length}/${it.t.sets}</span>`}</div>`;
+    if(a&&!done&&!cur)h+=`<button class="btn sm go ${queued?'pri':''}" data-a="go-ex" data-v="${i}">${queued?'⏱ ייפתח בסיום המנוחה (בטל)':a.phase==='rest'||a.phase==='exrest'?'⏭ פתח אחרי המנוחה':'⏭ עבור לתרגיל זה'}</button>`;
     if(it.notes)h+=`<div class="mut">📝 ${esc(it.notes)}</div>`;
     if(!done&&a){
       const hs=histFor(it,k);
@@ -951,11 +985,13 @@ function renderWork(){
     }else h+=`<div class="mut">${c?esc(cardioDesc(it.t,it.t.sets)):`${it.t.sets} סטים · ${it.t.r} חזרות · ${fmtN(it.t.w,1)} ק״ג`}</div>`;
     h+='</div>';
   });
+  if(a&&a.phase==='ready'&&nextPending(l,a.idx)>=0)h+=`<button class="btn big" data-a="skip-ex">⏭ דלג – עבור לתרגיל הבא${l.items[a.idx]&&l.items[a.idx].sets.length?' (הסטים שבוצעו נשמרים)':''}</button><div style="height:8px"></div>`;
   if(a)h+=`<button class="btn big danger" data-a="end">סיים אימון עכשיו</button>`;
   else if(!l.finishedAt)h+=`<button class="btn big pri" data-a="start" data-v="${k}">▶ המשך אימון</button>`;
   return h;
 }
 function updateTimer(){
+  const wd=$('#wdur');if(wd&&S.active&&S.logs[S.active.date])wd.textContent=hms(durOf(S.logs[S.active.date]));
   const a=S.active,ht=$('#hdrTimer');
   if(ht){const on=a&&TIMED.includes(a.phase);ht.classList.toggle('show',!!on);if(on)ht.textContent='⏱ '+mmss((a.endsAt-Date.now())/1000);}
   if(!a)return;
@@ -966,6 +1002,128 @@ function updateTimer(){
   if((a.phase==='cardio'||a.phase==='exrest')&&a.dur>90)warn(60,a.phase==='cardio'?'נותרה דקה':'עוד דקה לתרגיל הבא');
   if(a.phase==='rest'&&a.dur>=30)warn(10,'עוד עשר שניות');
   const tb=$('#tb');if(tb)tb.style.width=(a.dur?Math.min(100,Math.max(0,(1-left/a.dur)*100)):0)+'%';
+}
+
+/* ---- per-workout stats, duration, comparisons ---- */
+const hms=x=>{x=Math.max(0,Math.round(x));const h=Math.floor(x/3600),m=Math.floor(x%3600/60),q=x%60;return (h?h+':'+pad(m):m)+':'+pad(q);};
+const durOf=l=>l&&l.startedAt>1e12?Math.max(0,((l.finishedAt||Date.now())-l.startedAt)/1000):0;
+function logStats(l){
+  const r={sets:0,kg:0,km:0,cmin:0,done:0,total:l.items.length,skipped:0,hrB:null,hrA:null,dur:durOf(l)};
+  for(const it of l.items){
+    r.sets+=it.sets.length;if(itDone(it))r.done++;if(it.skipped)r.skipped++;
+    for(const x of it.sets){if(isCardio(it.group)){r.km+=x.km;r.cmin+=x.min;}else r.kg+=x.w*x.r;}
+    if(isCardio(it.group)){if(r.hrB==null&&it.hrB)r.hrB=it.hrB;if(it.hrA)r.hrA=it.hrA;}
+  }
+  return r;
+}
+const workedKeys=()=>Object.keys(S.logs).filter(d=>S.logs[d].items.some(i=>i.sets.length)).sort();
+function prevLog(k){const ks=workedKeys().filter(d=>d<k);return ks.length?ks[ks.length-1]:null;}
+function delta(cur,prev,unit,dec,better){
+  if(cur==null||prev==null)return '<span class="mut">—</span>';
+  const d=cur-prev;if(Math.abs(d)<1e-9)return '<span class="mut">● ללא שינוי</span>';
+  const col=better==='down'?(d<0?'var(--acc)':'var(--bad)'):better==='up'?(d>0?'var(--acc)':'var(--bad)'):'var(--mut)';
+  return `<span style="color:${col}">${d>0?'▲ +':'▼ '}${fmtN(d,dec)}${unit}</span>`;
+}
+function exLine(it){
+  if(!it.sets.length)return '<span class="mut">לא בוצע</span>';
+  if(isCardio(it.group)){const x=it.sets[it.sets.length-1];return esc(cardioDesc({kind:it.t.kind,min:x.min,km:x.km,spd:x.spd,inc:x.inc,ivN:x.iv,ivW:it.t.ivW,ivR:it.t.ivR},1));}
+  return it.sets.map(x=>`${fmtN(x.w,1)}×${x.r}`).join(' , ')+' <span class="mut">ק״ג×חזרות</span>';
+}
+function exChange(it,k){
+  const h=histFor(it,k);if(!h.length||!it.sets.length)return '<span class="mut">—</span>';
+  const p=h[0].it;
+  if(isCardio(it.group)){const a=it.sets.reduce((x,y)=>x+y.km,0),b=p.sets.reduce((x,y)=>x+y.km,0);return delta(a,b,' ק״מ',2,'up');}
+  return delta(Math.max(...it.sets.map(x=>x.w)),Math.max(...p.sets.map(x=>x.w)),' ק״ג',1,'up');
+}
+function workoutSummaryHtml(k){
+  const l=S.logs[k];if(!l)return '';
+  const st=logStats(l),pk=prevLog(k),ps=pk?logStats(S.logs[pk]):null;
+  const row=(lbl,val,dl)=>`<tr><td>${lbl}</td><td class="n">${val}</td><td class="n">${ps?dl:'<span class="mut">—</span>'}</td></tr>`;
+  let h=`<table><thead><tr><th>מדד</th><th class="n">אימון זה</th><th class="n">${pk?'מול '+shortD(pk):'שינוי'}</th></tr></thead><tbody>
+  ${row('⏱ משך האימון',st.dur?`<span class="dur">${hms(st.dur)}</span>`:'—',ps&&st.dur&&ps.dur?delta(st.dur/60,ps.dur/60,' דק׳',0,null):'<span class="mut">—</span>')}
+  ${row('תרגילים שבוצעו',`${st.done}/${st.total}${st.skipped?` <span class="mut">(${st.skipped} דולגו)</span>`:''}`,ps?delta(st.done,ps.done,'',0,'up'):'')}
+  ${row('סטים',st.sets,ps?delta(st.sets,ps.sets,'',0,'up'):'')}
+  ${row('ק״ג שהורמו',fmtN(st.kg),ps?delta(st.kg,ps.kg,' ק״ג',0,'up'):'')}
+  ${row('מרחק',fmtN(st.km,2)+' ק״מ',ps?delta(st.km,ps.km,' ק״מ',2,'up'):'')}
+  ${row('❤️ דופק לפני אירובי',st.hrB??'—',ps?delta(st.hrB,ps.hrB,'',0,'down'):'')}
+  ${row('❤️ דופק אחרי אירובי',st.hrA??'—',ps?delta(st.hrA,ps.hrA,'',0,'down'):'')}
+  </tbody></table>
+  <h3 style="margin:14px 0 4px">פירוט תרגילים</h3><table><thead><tr><th>תרגיל</th><th>ביצוע</th><th class="n">מול הקודם</th></tr></thead><tbody>
+  ${l.items.map(it=>`<tr><td>${esc(it.name)}${it.skipped?' <span class="pill k" style="font-size:11px">דולג</span>':''}<div class="mut">${it.sets.length}/${it.t.sets} סטים</div></td><td style="font-size:13px">${exLine(it)}</td><td class="n">${exChange(it,k)}</td></tr>`).join('')}
+  </tbody></table>`;
+  return h;
+}
+function openDaySummary(k){
+  if(!DATE_RE.test(k)||!S.logs[k])return;
+  openModal(`<div class="mh"><h2>📋 סיכום אימון – ${esc(fmtLong(k))}</h2><button class="ico" data-a="close" aria-label="סגור">✕</button></div>${workoutSummaryHtml(k)}<div class="actions"><button class="btn pri" data-a="close">סגור</button></div>`);
+}
+
+/* small SVG line chart: one measure per chart (no dual axis), 2px lines, ringed markers, tap/hover tooltip, table view */
+const SERIES=['#3b8de0','#c98314'];
+function niceStep(r){const p=Math.pow(10,Math.floor(Math.log10(r||1))),f=r/p;return (f<=1?1:f<=2?2:f<=5?5:10)*p;}
+function lineChart(id,labels,series,unit,dec){
+  const vals=series.flatMap(x=>x.vals.filter(v=>v!=null));
+  if(vals.length<2)return '<p class="mut">נדרשים לפחות שני אימונים עם נתון זה.</p>';
+  const W=340,H=170,L=40,R=34,T=12,B=24,n=labels.length;
+  let lo=Math.min(...vals),hi=Math.max(...vals);if(lo===hi){lo-=1;hi+=1;}
+  const st=niceStep((hi-lo)/3);lo=Math.floor(lo/st)*st;hi=Math.ceil(hi/st)*st;if(lo<0&&Math.min(...vals)>=0)lo=0;
+  const X=i=>n===1?L+(W-L-R)/2:L+i*(W-L-R)/(n-1),Y=v=>T+(1-(v-lo)/(hi-lo))*(H-T-B);
+  let g='';
+  for(let v=lo;v<=hi+1e-9;v+=st)g+=`<line x1="${L}" x2="${W-R}" y1="${Y(v).toFixed(1)}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/><text x="${L-6}" y="${(Y(v)+3.5).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--mut)">${fmtN(v,dec)}</text>`;
+  const xl=[0,n-1];if(n>4)xl.splice(1,0,Math.floor((n-1)/2));
+  for(const i of [...new Set(xl)])g+=`<text x="${X(i).toFixed(1)}" y="${H-6}" text-anchor="middle" font-size="10" fill="var(--mut)">${esc(labels[i])}</text>`;
+  series.forEach((sr,si)=>{
+    const col=SERIES[si],pts=sr.vals.map((v,i)=>v==null?null:[X(i),Y(v),v,i]).filter(Boolean);
+    if(pts.length>1)g+=`<path d="${pts.map((q,j)=>(j?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' ')}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    for(const q of pts){const tip=`${labels[q[3]]} · ${sr.name}: ${fmtN(q[2],dec)}${unit}`;
+      g+=`<circle cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="4" fill="${col}" stroke="var(--panel)" stroke-width="2"/><circle class="hit" cx="${q[0].toFixed(1)}" cy="${q[1].toFixed(1)}" r="12" fill="transparent" data-a="tip" data-c="${id}" data-v="${esc(tip)}"><title>${esc(tip)}</title></circle>`;}
+    const last=pts[pts.length-1];if(last)g+=`<text x="${(last[0]+7).toFixed(1)}" y="${(last[1]+3.5).toFixed(1)}" font-size="11" fill="var(--txt)">${fmtN(last[2],dec)}</text>`;
+  });
+  const legend=series.length>1?`<div class="lg">${series.map((sr,si)=>`<span><i style="background:${SERIES[si]}"></i>${esc(sr.name)}</span>`).join('')}</div>`:'';
+  const table=`<details class="tbl"><summary>הצג כטבלה</summary><table><thead><tr><th>אימון</th>${series.map(sr=>`<th class="n">${esc(sr.name)}</th>`).join('')}</tr></thead><tbody>${labels.map((lb,i)=>`<tr><td>${esc(lb)}</td>${series.map(sr=>`<td class="n">${sr.vals[i]==null?'—':fmtN(sr.vals[i],dec)}</td>`).join('')}</tr>`).join('')}</tbody></table></details>`;
+  return `${legend}<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x=>x.name).join(', '))}">${g}</svg><div class="tip" id="tip-${id}" aria-live="polite"></div>${table}`;
+}
+function strengthNames(){
+  const m=new Map();
+  for(const k of workedKeys())for(const it of S.logs[k].items)if(!isCardio(it.group)&&it.sets.length){const key=it.group+'|'+it.name;if(!m.has(key))m.set(key,{key,name:it.name,group:it.group});}
+  return [...m.values()];
+}
+function renderCompare(){
+  const endK=ui.sumY+'-'+pad(ui.sumM+1)+'-31',all=workedKeys();
+  const ks=all.filter(d=>d<=endK).slice(-12);
+  let h=`<div class="card"><h2>📈 השוואת אימונים</h2>`;
+  if(ks.length<2)return h+'<p class="mut">ההשוואה תופיע אחרי שני אימונים לפחות.</p></div>';
+  const sts=ks.map(k=>logStats(S.logs[k])),lb=ks.map(shortD);
+  h+=`<p class="mut" style="margin:0 0 6px">${ks.length} האימונים האחרונים עד סוף ${MONTHS[ui.sumM]}. הקש על נקודה לפרטים.</p>
+  <h3>ק״ג שהורמו בכל אימון</h3>${lineChart('kg',lb,[{name:'ק״ג',vals:sts.map(x=>x.kg||null)}],' ק״ג',0)}
+  <h3 style="margin-top:14px">❤️ דופק באירובי</h3>${lineChart('hr',lb,[{name:'לפני',vals:sts.map(x=>x.hrB)},{name:'אחרי',vals:sts.map(x=>x.hrA)}],'',0)}
+  <h3 style="margin-top:14px">⏱ משך אימון (דקות)</h3>${lineChart('dur',lb,[{name:'דקות',vals:sts.map(x=>x.dur?Math.round(x.dur/60):null)}],' דק׳',0)}`;
+  const names=strengthNames();
+  if(names.length){
+    const sel=names.find(x=>x.key===ui.cmpEx)||names[0];ui.cmpEx=sel.key;
+    const pv=ks.map(k=>{const it=S.logs[k].items.find(x=>x.group===sel.group&&x.name===sel.name&&x.sets.length);return it?Math.max(...it.sets.map(y=>y.w)):null;});
+    const seen=pv.map((v,i)=>[v,i]).filter(x=>x[0]!=null);
+    h+=`<h3 style="margin-top:14px">🏋️ התקדמות משקל לפי תרגיל</h3><select id="cmpEx" aria-label="בחר תרגיל">${names.map(x=>`<option value="${esc(x.key)}" ${x.key===sel.key?'selected':''}>${esc(x.name)} · ${esc(GN[x.group])}</option>`).join('')}</select>
+    ${lineChart('ex',lb,[{name:'משקל מרבי',vals:pv}],' ק״ג',1)}
+    ${seen.length>1?`<p style="margin:4px 0">שינוי מהאימון הראשון בגרף: ${delta(seen[seen.length-1][0],seen[0][0],' ק״ג',1,'up')} · מהקודם: ${delta(seen[seen.length-1][0],seen[seen.length-2][0],' ק״ג',1,'up')}</p>`:''}`;
+  }
+  const desc=all.slice().reverse();
+  const A=desc.includes(ui.cmpA)?ui.cmpA:desc[1],B=desc.includes(ui.cmpB)?ui.cmpB:desc[0];ui.cmpA=A;ui.cmpB=B;
+  const sa=logStats(S.logs[A]),sb=logStats(S.logs[B]);
+  const opt=v=>desc.map(k=>`<option value="${k}" ${k===v?'selected':''}>${esc(shortD(k))}.${k.slice(2,4)}</option>`).join('');
+  const r=(lbl,va,vb,unit,dec,better)=>`<tr><td>${lbl}</td><td class="n">${va==null?'—':fmtN(va,dec)}</td><td class="n">${vb==null?'—':fmtN(vb,dec)}</td><td class="n">${delta(vb,va,unit,dec,better)}</td></tr>`;
+  const exRows=[];const la=S.logs[A],lb2=S.logs[B];
+  for(const it of lb2.items){if(isCardio(it.group)||!it.sets.length)continue;const o=la.items.find(x=>sameEx(x,it)&&x.sets.length);if(!o)continue;
+    exRows.push(r(esc(it.name),Math.max(...o.sets.map(x=>x.w)),Math.max(...it.sets.map(x=>x.w)),' ק״ג',1,'up'));}
+  h+=`<h3 style="margin-top:16px">⚖️ השוואה בין שני אימונים</h3>
+  <div class="grid2"><div><label for="cmpA">אימון א׳</label><select id="cmpA">${opt(A)}</select></div><div><label for="cmpB">אימון ב׳</label><select id="cmpB">${opt(B)}</select></div></div>
+  <table style="margin-top:8px"><thead><tr><th>מדד</th><th class="n">א׳</th><th class="n">ב׳</th><th class="n">שינוי</th></tr></thead><tbody>
+  ${r('משך (דק׳)',sa.dur?Math.round(sa.dur/60):null,sb.dur?Math.round(sb.dur/60):null,' דק׳',0,null)}
+  ${r('ק״ג שהורמו',sa.kg,sb.kg,' ק״ג',0,'up')}${r('סטים',sa.sets,sb.sets,'',0,'up')}${r('מרחק (ק״מ)',sa.km,sb.km,' ק״מ',2,'up')}
+  ${r('דופק לפני',sa.hrB,sb.hrB,'',0,'down')}${r('דופק אחרי',sa.hrA,sb.hrA,'',0,'down')}
+  ${exRows.length?`<tr><td colspan="4" class="mut" style="padding-top:10px">משקל מרבי לפי תרגיל</td></tr>${exRows.join('')}`:''}
+  </tbody></table></div>`;
+  return h;
 }
 
 /* ---- summary ---- */
@@ -1064,6 +1222,9 @@ function renderSum(){
   <div class="kpi" style="grid-column:1/-1;background:#14241d;border:1px solid var(--acc2)"><div class="v">${fmtN(r.km,2)} ק״מ</div><div class="l">סה״כ מרחק בחודש · 🚶 הליכה ${fmtN(r.walkKm,2)} · 🏃 ריצה ${fmtN(r.runKm,2)}</div></div>
   <div class="kpi"><div class="v">${r.sets}</div><div class="l">סטים שבוצעו</div></div>
   <div class="kpi"><div class="v">${r.cmin}</div><div class="l">דקות אירובי</div></div></div></div>`;
+  const mk=workedKeys().filter(d=>d.startsWith(pre));
+  if(mk.length)h+=`<div class="card"><h2>📋 האימונים החודש</h2>${mk.map(k=>{const x=logStats(S.logs[k]);return `<div class="li"><span class="nm"><b>${esc(shortD(k))}</b> <span class="mut">· ${x.dur?hms(x.dur)+' · ':''}${fmtN(x.kg)} ק״ג · ${fmtN(x.km,1)} ק״מ${x.skipped?' · '+x.skipped+' דולגו':''}</span></span><button class="btn sm" data-a="day-sum" data-v="${k}">סיכום</button></div>`;}).join('')}</div>`;
+  h+=renderCompare();
   h+=renderPulse();
   const gsets={};for(const e of Object.values(r.byEx))if(!isCardio(e.group))gsets[e.group]=(gsets[e.group]||0)+e.sets;
   const gtot=Object.values(gsets).reduce((a,b)=>a+b,0);
@@ -1219,6 +1380,10 @@ const actions={
   undo:()=>doUndo(),
   'test-voice':()=>{say('בדיקת הקראה. המנוחה הסתיימה. סט 2 מתוך 3.',true);if(!window.speechSynthesis)toast('הדפדפן לא תומך בהקראה קולית');},
   'apply-sug':v=>applySug(int(v,0,MAX_PLAN_ITEMS,-1)),
+  'day-sum':v=>openDaySummary(v),
+  tip:(v,el)=>{const c=el&&el.dataset.c;const t=c&&/^[a-z]{1,8}$/.test(c)?document.getElementById('tip-'+c):null;if(t)t.textContent=v||'';},
+  'go-ex':v=>goEx(int(v,0,MAX_PLAN_ITEMS,-1)),
+  'skip-ex':()=>{const a=S.active,l=a&&S.logs[a.date];if(!l)return;const n=nextPending(l,a.idx);if(n>=0)goEx(n);},
   'test-beep':()=>{unlockAudio();const v=$('#s-vol');const old=S.settings.vol;if(v)S.settings.vol=int(v.value,0,100,100);beep(2);S.settings.vol=old;},
   end:()=>confirmBox('לסיים את האימון עכשיו? הסטים שלא סומנו לא ייספרו.','סיים',()=>{takeUndo('האימון הסתיים');finishWorkout(false);}),
   'sum-m':v=>{ui.sumM+=Number(v);if(ui.sumM<0){ui.sumM=11;ui.sumY--;}if(ui.sumM>11){ui.sumM=0;ui.sumY++;}render();},
@@ -1233,7 +1398,7 @@ document.addEventListener('click',ev=>{
   const b=ev.target.closest('[data-a]');
   if(!b){if(ev.target.id==='ov')closeModal();return;}
   const f=own(actions,b.dataset.a)?actions[b.dataset.a]:null;
-  if(f){ev.preventDefault();f(b.dataset.v);}
+  if(f){ev.preventDefault();f(b.dataset.v,b);}
 });
 document.addEventListener('submit',ev=>{ev.preventDefault();if(ev.target.id==='exf')saveEx();});
 document.addEventListener('change',ev=>{
@@ -1241,6 +1406,8 @@ document.addEventListener('change',ev=>{
   if(t.id==='f-group'||t.name==='f-kind')toggleCardioFields();
   if(t.dataset&&t.dataset.hr){savePulse(t);}
   if(t.dataset&&t.dataset.km){saveKm(t);}
+  if(t.id==='cmpEx'){ui.cmpEx=String(t.value).slice(0,120);render();}
+  if(t.id==='cmpA'||t.id==='cmpB'){if(DATE_RE.test(t.value)&&S.logs[t.value])ui[t.id]=t.value;render();}
   if(t.id==='f-spd'||t.id==='f-min'||t.id==='f-km')estDist();
   if(t.id==='s-vol'){const v=$('#s-vol-v');if(v)v.textContent=int(t.value,0,100,100)+'%';}
   if(t.dataset&&t.dataset.rt){const a=S.active;if(!a)return;const keep=$('#rest-keep')&&$('#rest-keep').checked;

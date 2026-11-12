@@ -82,7 +82,7 @@ with sync_playwright() as p:
     li = pg.evaluate(f'__gym.S.logs["{today}"].items.map(i=>[i.group,i.role])')
     check('log order: cardio first & last', li == [['cardio','warm'],['chest',''],['cardio','cool']])
     check('workout active, ready', pg.evaluate('__gym.S.active.phase') == 'ready')
-    check('later exercises locked', pg.locator('.wi.lock').count() == 2)
+    check('other exercises unlocked with switch buttons', pg.locator('.wi.lock').count() == 0 and pg.locator('[data-a=go-ex]').count() == 2)
     pg.fill('#hr-b-0', '78'); pg.press('#hr-b-0','Tab'); pg.wait_for_timeout(100)
     check('pulse before saved', pg.evaluate(f'__gym.S.logs["{today}"].items[0].hrB') == 78)
     pg.fill('#hr-b-0', '999'); pg.press('#hr-b-0','Tab'); pg.wait_for_timeout(100)

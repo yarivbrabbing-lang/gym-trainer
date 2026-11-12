@@ -1,5 +1,5 @@
 /* Offline support. Bump VERSION on every release so phones pick up the new files. */
-const VERSION = 'gym-v1.3.0';
+const VERSION = 'gym-v1.4.0';
 const ASSETS = ['./', 'index.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'maskable-192.png', 'maskable-512.png',
   'apple-touch-icon.png', 'favicon-64.png'];
